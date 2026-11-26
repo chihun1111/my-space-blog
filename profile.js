@@ -2,18 +2,18 @@ import { escapeHTML as e, icon, safeURL, dateText } from './lib.js';
 
 const labels = {
   ko: {
-    links: '코드와 프로젝트', github: 'GitHub 프로필', source: '블로그 소스',
-    activity: '최근 작업', activityIntro: '지금 살펴보고 고치는 것들.',
-    updated: '소개 업데이트', projects: '만들어온 것',
-    projectsIntro: '직접 만든 서비스와 함께 개선한 프로젝트.',
-    timeline: '기록의 흐름', article: '관련 글 읽기', koreanArticle: '한국어 글 읽기', englishArticle: '영어 글 읽기', repository: '저장소 보기', detail: '자세히 보기',
+    links: '코드와 프로젝트', github: 'GitHub 프로필', source: '블로그 코드',
+    activity: '요즘 하는 것', activityIntro: '만들고 써보면서 조금씩 고치고 있어요.',
+    updated: '마지막 수정', projects: '만들어 본 것들',
+    projectsIntro: '직접 만들거나 팀으로 함께 작업한 것들이에요.',
+    timeline: '그동안의 기록', article: '관련 글 읽기', koreanArticle: '한국어 글 읽기', englishArticle: '영어 글 읽기', repository: '저장소 보기', detail: '자세히 보기',
   },
   en: {
-    links: 'Code and projects', github: 'GitHub profile', source: 'Blog source',
-    activity: 'Recent work', activityIntro: 'What I am exploring and improving.',
-    updated: 'Profile updated', projects: 'Things I have built',
-    projectsIntro: 'Services I built and projects I helped improve.',
-    timeline: 'Along the way', article: 'Read the post', koreanArticle: 'Read the post (Korean)', englishArticle: 'Read the post (English)', repository: 'View repository', detail: 'Learn more',
+    links: 'Code and projects', github: 'GitHub profile', source: 'Blog code',
+    activity: 'Lately', activityIntro: 'A few things I have been building, trying out, and fixing.',
+    updated: 'Last updated', projects: 'Things I have made',
+    projectsIntro: 'Some solo projects and things I worked on with others.',
+    timeline: 'Notes along the way', article: 'Read the post', koreanArticle: 'Read the post (Korean)', englishArticle: 'Read the post (English)', repository: 'View repository', detail: 'Learn more',
   },
 };
 

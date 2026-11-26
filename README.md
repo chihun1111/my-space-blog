@@ -1,8 +1,8 @@
-# Chihun · 개발과 서버 기록
+# Chihun · 코딩이랑 홈서버 이야기
 
 [블로그](https://chihun1111.github.io/my-space-blog/) · [소개](https://chihun1111.github.io/my-space-blog/about/) · [GitHub](https://github.com/chihun1111)
 
-AI 서비스와 CTF 플랫폼을 개발한 과정, Proxmox·TrueNAS 홈서버를 구성하고 문제를 해결한 기록을 남깁니다. 한국어 글과 한국어·영어 소개를 제공합니다.
+개발하다가 배운 것, 홈서버를 만지면서 생긴 일을 적는 개인 블로그입니다. 말씨에 참여한 이야기와 CTF 플랫폼을 만들어 본 과정, Proxmox·TrueNAS를 써본 기록을 모아뒀습니다. 글은 한국어로, 소개는 한국어와 영어로 볼 수 있습니다.
 
 ## 글과 소개를 수정하기
 
