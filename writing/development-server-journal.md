@@ -36,7 +36,7 @@ CTF는 문제를 풀어 찾은 정답인 ‘플래그’를 제출하는 방식�
 
 - AI 대화 프로젝트가 궁금하다면 [말씨 이야기](./malssi-ai-conversation-recovery.md)
 - 웹 사이트와 서버 배포 쪽이 궁금하다면 [CTF 사이트 이야기](./ctf-platform-auth-submission-operations.md)
-- 홈서버를 어떻게 나눴는지 궁금하다면 [내 홈서버 구축 기록](https://chihun1111.github.io/my-space-blog/posts/homelab-things-i-built/)
+- 홈서버를 어떻게 나눴는지 궁금하다면 [제 홈서버 구축 기록](https://chihun1111.github.io/my-space-blog/posts/homelab-things-i-built/)
 - 밖에서 서버에 접속하는 방법이 궁금하다면 [Tailscale과 SSH 기록](https://chihun1111.github.io/my-space-blog/posts/tailscale-ssh-homelab/)
 
 앞으로도 만들어 본 것과 막혔다가 고친 내용을 하나씩 적어 보려고 해요. 홈서버 글에는 당시 설정과 확인한 날짜를 함께 남겼어요. 다음에 다시 만질 때 이 기록이 도움이 되면 좋겠어요.
