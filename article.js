@@ -10,8 +10,8 @@ installCodeCopy();
 const copy = document.querySelector('#copy-link');
 const toast = document.querySelector('#toast');
 let toastTimer;
-copy.hidden = false;
-copy.addEventListener('click', async () => {
+if (copy) copy.hidden = false;
+copy?.addEventListener('click', async () => {
   const url = new URL(location.href);
   url.pathname = new URL('./', url).pathname;
   url.search = '';

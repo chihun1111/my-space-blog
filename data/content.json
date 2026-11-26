@@ -2,14 +2,17 @@
   "site": {
     "name": "Chihun",
     "initials": "C.",
-    "role": "",
-    "heroTitle": "",
-    "heroDescription": "Proxmox와 TrueNAS로 꾸린 홈서버의 구성과 운영 기록.",
-    "aboutTitle": "",
-    "aboutText": "Proxmox 위에 NAS, 자동화, 게임 서버, 개발 환경을 나눠 뒀다. 각 서비스의 설정과 쓰면서 고친 문제를 이곳에 기록한다.",
-    "github": "",
+    "role": "서비스를 만들고, 서버에서 검증하는 개발자",
+    "heroTitle": "코드부터 서버까지,\n직접 만들며 남긴 기록",
+    "heroDescription": "AI 서비스의 대화 흐름과 백엔드를 만들고, CTF 플랫폼과 홈서버를 다룹니다. 구현한 기능, 운영하면서 고친 문제, 아직 확인할 일을 함께 기록합니다.",
+    "aboutTitle": "안녕하세요, 이치헌입니다.",
+    "aboutText": "웹에서 시작한 기능이 서버에서 끝까지 동작하는 과정에 관심이 많습니다. 화면과 API를 연결하고, 데이터를 저장하고, 배포한 뒤 생기는 문제를 따라가며 개발합니다. GitHub에서는 **chihun1111**이라는 이름으로 작업하고 있습니다.\n\n최근에는 HOP Biohealth AI Challenge의 팀 프로젝트 **말씨**에 참여해 PostgreSQL과 Gemma 모델 경로를 연결하고 대화 흐름을 개선했습니다. 모델 호출이 실패해도 입력을 보존하고, 답변을 수정했을 때 오래된 결과가 덮어쓰지 않도록 다듬었습니다. 질문을 고르는 모델과 최종 카드를 만드는 모델의 역할을 나누고, 후속 대화·결과 저장·재시작 복구까지 이어지는 작업을 반영했습니다.\n\n**CTF 대회를 위한 웹 플랫폼**은 직접 구현하며 서버 구축과 배포까지 맡았습니다. 문제의 유형과 난이도를 구성하고, 참가자의 진행 상황과 제출 내역을 관리하는 기능을 만들었습니다. 지금 공개한 코드에서는 인증과 권한, 개인별 플래그, 제출 처리와 감사 기록, 서비스 배포 경계를 함께 다루고 있습니다.\n\n개발 환경 밖에서는 **Proxmox와 TrueNAS를 중심으로 홈서버**를 구성해 왔습니다. 저장소, 개발 환경, 자동화, 게임 서버를 VM과 서비스로 나누고, 원격 접속과 전원 제어도 직접 다뤘습니다. 이 블로그의 홈서버 글에는 2026년 10월에 확인한 구성과 그때 해결한 문제를 남겼습니다. 각 글에서 설정값과 실제 응답, 아직 확인하지 못한 부분을 구분합니다.\n\n# 이곳에 남기는 것\n\n- **개발 과정:** 어떤 문제를 해결하려고 만들었는지, 상태와 데이터의 경계를 어떻게 나눴는지.\n- **서버 운영:** VM·스토리지·네트워크를 구성하고 서비스에 연결한 과정.\n- **문제 해결:** 실패한 시도, 원인을 좁힌 과정, 바꾼 코드와 확인한 결과.\n- **프로젝트 회고:** 팀 안에서 맡은 작업, 완성한 기능, 다음에 더 검증할 부분.\n\n완성된 결과만 올리기보다, 다시 같은 문제를 만났을 때 이어서 작업할 수 있는 기록을 쌓으려고 합니다.",
+    "github": "https://github.com/chihun1111",
     "email": "",
     "topics": [
+      "프로젝트",
+      "AI·백엔드",
+      "웹·보안",
       "서버 설정",
       "NAS·서비스",
       "자동화·접속",
@@ -19,21 +22,254 @@
     "aboutImage": "",
     "translations": {
       "en": {
-        "role": "",
-        "heroTitle": "",
-        "heroDescription": "Notes on building and running a home server with Proxmox and TrueNAS.",
-        "aboutTitle": "",
-        "aboutText": "I use a Proxmox home server for storage, automation, game servers, and development. I keep notes here on how it is set up and the problems I fixed along the way.",
+        "role": "Building services and following them through to the server",
+        "heroTitle": "From code to servers,\nnotes from building things",
+        "heroDescription": "I work on AI conversation flows and backends, a CTF platform, and my home server. I document the features I build, the problems I investigate, and what still needs verification.",
+        "aboutTitle": "Hi, I’m Chihun.",
+        "aboutText": "I care about the whole path from a feature on a web page to a service running on a server. I connect interfaces, APIs, and databases, then follow the problems that appear after deployment. On GitHub, I work as **chihun1111**.\n\nRecently I contributed to **Malssi**, a team project for the HOP Biohealth AI Challenge. My work connected PostgreSQL and Gemma model paths and improved input preservation, retries, follow-up conversations, and saved results. I also contributed to separating question routing from final card generation and recovering result jobs after edits or restarts.\n\nI built a **CTF competition platform** and handled server setup and deployment. It includes challenge design and tools for tracking participant progress and submissions. The current public implementation separates authentication, participant-specific flags, submission records, audit logging, and service deployment boundaries.\n\nI have also built a **Proxmox and TrueNAS home server**, with storage, development environments, automation, and game services in separate VMs or services. The home-server articles describe the configuration and behavior checked in October 2026, including what remained unresolved.\n\n# What I write about\n\n- **Development:** the problem behind a feature and the state and data boundaries around it.\n- **Servers:** how virtual machines, storage, networks, and services fit together.\n- **Debugging:** failed attempts, changes, and the results I could actually verify.\n- **Project notes:** my contributions, completed work, and the next questions to investigate.\n\nI want these notes to be useful when I return to the same problem and need to continue from where I left off.",
         "topics": [
+          "Projects",
+          "AI & backends",
+          "Web & security",
           "Server setup",
           "NAS & services",
           "Automation & access",
           "Game servers"
+        ],
+        "activity": [
+          {
+            "status": "Recently improved",
+            "title": "Malssi conversation and result recovery",
+            "detail": "Purpose-and-situation questions, separate question and card models, and result jobs that account for answer edits and server restarts.",
+            "postSlug": "malssi-ai-conversation-recovery"
+          },
+          {
+            "status": "Built and refined",
+            "title": "CTF authentication and submissions",
+            "detail": "Participant and admin workflows with individual flags, sessions, submission records, and explicit service boundaries.",
+            "postSlug": "ctf-platform-auth-submission-operations"
+          },
+          {
+            "status": "Configuration notes",
+            "title": "A home server for development",
+            "detail": "Notes on Proxmox, TrueNAS, remote access, power control, automation, and game services checked in October.",
+            "postSlug": "homelab-things-i-built"
+          }
+        ],
+        "projects": [
+          {
+            "name": "Malssi · HOP Biohealth AI Challenge",
+            "period": "October–November 2026",
+            "role": "Team project · backend, model integration, and recovery",
+            "description": "A service helping family and friends prepare conversations and actions for someone facing difficulties. I contributed to PostgreSQL integration, input preservation, retries, follow-up conversations, model roles, and result-job recovery.",
+            "tags": [
+              "JavaScript",
+              "PostgreSQL",
+              "Gemma",
+              "State management"
+            ],
+            "url": "https://github.com/seonizz/HOP_Biohealth_AI-Challenge",
+            "postSlug": "malssi-ai-conversation-recovery"
+          },
+          {
+            "name": "CTF operations platform",
+            "period": "Independent implementation and deployment",
+            "role": "Participant experience through admin operations",
+            "description": "I handled challenge design, progress and submission management, data protection, and deployment. The current Next.js and NestJS implementation separates authentication, individual flags, audit logs, and Docker services.",
+            "tags": [
+              "Next.js",
+              "NestJS",
+              "PostgreSQL",
+              "Docker",
+              "Nginx"
+            ],
+            "url": "https://github.com/chihun1111/CTF_KDU",
+            "postSlug": "ctf-platform-auth-submission-operations"
+          },
+          {
+            "name": "Personal home server",
+            "period": "Configuration notes · October 2026",
+            "role": "Virtualization, storage, access, and services",
+            "description": "Proxmox and TrueNAS with NAS apps, development and data VMs, power control, automation, and game servers. The notes distinguish a running VM from an application that responds correctly.",
+            "tags": [
+              "Proxmox",
+              "TrueNAS",
+              "Tailscale",
+              "Home Assistant"
+            ],
+            "postSlug": "homelab-things-i-built"
+          }
+        ],
+        "timeline": [
+          {
+            "date": "2026-11",
+            "title": "Model roles and recovery in Malssi",
+            "detail": "Separated question routing from final card generation and handled stale results and restarts using answer revisions and execution leases."
+          },
+          {
+            "date": "2026-11",
+            "title": "HOP Biohealth AI Challenge award",
+            "detail": "Participated in the Malssi project with team 씨앗, which received an award."
+          },
+          {
+            "date": "2026-10",
+            "title": "Documented the home server",
+            "detail": "Recorded Proxmox, TrueNAS, VM resources, networking, remote access, power control, NAS apps, and development environments."
+          },
+          {
+            "date": "2026-10",
+            "title": "Deepvoice AI detection competition award",
+            "detail": "Participated with a team in an AI detection competition addressing deepvoice crime and received an award."
+          }
         ]
       }
-    }
+    },
+    "author": "이치헌",
+    "profileRepository": "https://github.com/chihun1111/my-space-blog",
+    "url": "https://chihun1111.github.io/my-space-blog/",
+    "updatedAt": "2026-11-26",
+    "activity": [
+      {
+        "status": "최근 개선",
+        "title": "말씨의 대화 흐름과 결과 복구",
+        "detail": "목적·상황을 먼저 묻는 질문 흐름, 질문/카드 모델 분리, 답변 수정과 서버 재시작에 대응하는 결과 작업을 반영했습니다.",
+        "postSlug": "malssi-ai-conversation-recovery"
+      },
+      {
+        "status": "구현·개선",
+        "title": "CTF 플랫폼의 인증과 제출 처리",
+        "detail": "참가자 화면에서 관리자 운영까지 연결하고, 개인별 플래그·세션·제출 기록·서비스 경계를 다루고 있습니다.",
+        "postSlug": "ctf-platform-auth-submission-operations"
+      },
+      {
+        "status": "구성 기록",
+        "title": "개발 환경을 받치는 홈서버",
+        "detail": "Proxmox·TrueNAS, 원격 접속, WOL, 자동화와 게임 서버를 구성한 과정 및 10월에 확인한 상태를 정리했습니다.",
+        "postSlug": "homelab-things-i-built"
+      }
+    ],
+    "projects": [
+      {
+        "name": "말씨 · HOP Biohealth AI Challenge",
+        "period": "2026.10–11",
+        "role": "팀 프로젝트 · 백엔드·모델 연동·대화 복구",
+        "description": "어려움을 겪는 사람 곁의 가족·친구가 대화와 행동을 준비하도록 돕는 서비스입니다. PostgreSQL 연결, 입력 보존과 재시도, 후속 대화, 모델 역할 분리와 결과 작업 복구에 기여했습니다.",
+        "tags": [
+          "JavaScript",
+          "PostgreSQL",
+          "Gemma",
+          "상태 관리"
+        ],
+        "url": "https://github.com/seonizz/HOP_Biohealth_AI-Challenge",
+        "postSlug": "malssi-ai-conversation-recovery"
+      },
+      {
+        "name": "CTF 운영 플랫폼",
+        "period": "직접 구현 · 서버 구축·배포",
+        "role": "참가자 기능부터 관리자 운영까지",
+        "description": "문제 구성, 참가자의 진행·제출 현황 관리, 데이터 보호와 배포를 맡았습니다. 현재 공개 코드는 Next.js·NestJS를 중심으로 인증, 개인별 플래그, 감사 기록, Docker 서비스 구성을 나눕니다.",
+        "tags": [
+          "Next.js",
+          "NestJS",
+          "PostgreSQL",
+          "Docker",
+          "Nginx"
+        ],
+        "url": "https://github.com/chihun1111/CTF_KDU",
+        "postSlug": "ctf-platform-auth-submission-operations"
+      },
+      {
+        "name": "개인 홈서버",
+        "period": "2026.10 구성·문제 해결 기록",
+        "role": "가상화·스토리지·접속·서비스 운영",
+        "description": "Proxmox와 TrueNAS를 바탕으로 NAS, 개발·데이터 VM, WOL, 자동화, 게임 서버를 구성했습니다. VM이 켜진 상태와 서비스가 실제로 응답하는 상태를 구분해 기록합니다.",
+        "tags": [
+          "Proxmox",
+          "TrueNAS",
+          "Tailscale",
+          "Home Assistant"
+        ],
+        "postSlug": "homelab-things-i-built"
+      }
+    ],
+    "timeline": [
+      {
+        "date": "2026-11",
+        "title": "말씨의 모델 역할 분리와 작업 복구",
+        "detail": "질문 라우팅과 최종 카드 생성 경로를 나누고, 답변 버전·실행 권한을 기준으로 오래된 결과와 재시작을 처리했습니다."
+      },
+      {
+        "date": "2026-11",
+        "title": "HOP Biohealth AI Challenge 수상",
+        "detail": "씨앗 팀으로 말씨 프로젝트에 참여해 대회 수상으로 이어졌습니다."
+      },
+      {
+        "date": "2026-10",
+        "title": "홈서버의 구성과 문제 해결 과정 정리",
+        "detail": "Proxmox·TrueNAS, VM 자원과 네트워크, WOL·원격 접속, NAS 앱과 개발 환경의 기록을 남겼습니다."
+      },
+      {
+        "date": "2026-10",
+        "title": "딥보이스 AI 탐지 경진대회 수상",
+        "detail": "딥보이스 범죄 대응을 위한 AI 탐지 모델 경진대회에 팀으로 참여해 수상했습니다."
+      }
+    ]
   },
   "posts": [
+    {
+      "slug": "development-server-journal",
+      "title": "개발과 홈서버 사이에서 만드는 것들",
+      "date": "2026-11-26",
+      "description": "말씨·CTF 플랫폼·홈서버를 연결해 소개하고, 처음 방문한 독자를 위한 읽기 순서를 정리했습니다.",
+      "tags": [
+        "프로젝트",
+        "서버 설정"
+      ],
+      "cover": "",
+      "image": "",
+      "language": "ko",
+      "translationKey": "development-server-journal",
+      "body": "이 블로그에는 내가 만든 서비스와 그 서비스를 받치는 서버의 기록을 함께 남긴다. 웹 화면을 구현하다 보면 데이터 저장과 모델 호출을 다루게 되고, 서비스를 올려 보면 네트워크·스토리지·권한·복구의 문제가 따라온다. 코드와 서버를 오가며 해결한 일을 한곳에서 이어 읽을 수 있도록 정리했다.\n\nGitHub에서는 [chihun1111](https://github.com/chihun1111)이라는 이름으로 작업한다. 최근 개발 작업은 말씨와 CTF 플랫폼에서, 서버 구성과 운영 기록은 Proxmox·TrueNAS 홈서버 글에서 볼 수 있다.\n\n# 최근에는 말씨의 대화 흐름과 복구를 다뤘다\n\n말씨는 HOP Biohealth AI Challenge에서 함께 만든 팀 프로젝트다. 어려움을 겪는 사람 곁의 가족이나 친구가 대화와 행동을 준비하도록 돕는다. 나는 PostgreSQL과 Gemma 모델 경로를 연결하고, 입력 보존과 재시도, 후속 대화, 카드 저장 흐름을 개선하는 작업에 참여했다.\n\n최근 변경에서는 질문을 고르는 모델과 최종 카드를 만드는 모델의 역할을 나누었다. 사용자가 답변을 고치는 동안 예전 결과가 도착하거나, 결과를 만드는 서버가 재시작하는 경우도 다뤘다. 화면에 응답을 보여 주는 일과 올바른 버전의 결과를 끝까지 저장하는 일을 함께 생각한 프로젝트다.\n\n[말씨 개발 기록: AI의 답변을 끝까지 전달하고 저장하기](#post/malssi-ai-conversation-recovery)에서 질문 흐름, 상태 관리, 결과 작업의 실행 권한과 복구를 자세히 적었다. [프로젝트 소스](https://github.com/seonizz/HOP_Biohealth_AI-Challenge)와 [내 변경 이력](https://github.com/seonizz/HOP_Biohealth_AI-Challenge/commits/main/?author=chihun1111)도 함께 볼 수 있다.\n\n# CTF 플랫폼에서는 참가와 운영을 함께 만들었다\n\nCTF 플랫폼은 문제를 보여 주고 정답을 받는 화면에서 시작해, 참가자 진행 상황과 제출 내역을 확인하는 관리자 기능, 데이터 보호, 서버 구축과 배포까지 직접 맡은 프로젝트다.\n\n현재 공개 코드에는 Next.js 화면과 NestJS 백엔드, PostgreSQL, Redis, Nginx, Docker 구성이 들어 있다. 참가자가 어떤 문제를 풀었는지 확인하는 과정과 최종 제출을 확정하는 과정, 운영자가 상태를 보는 과정을 구분했다. 각 계층의 성공과 실패를 어떻게 연결할지가 중요한 주제다.\n\n[CTF 플랫폼을 만들며 배운 인증·제출·운영의 경계](#post/ctf-platform-auth-submission-operations)에서는 개인별 플래그, 제출과 기록의 일관성, 관리자 기능과 서비스 배포 구조를 다룬다. 구현은 [CTF 플랫폼 저장소](https://github.com/chihun1111/CTF_KDU)에서 확인할 수 있다.\n\n# 홈서버는 서비스를 직접 올려 보는 환경이다\n\n홈서버는 Proxmox 위에 TrueNAS, 개발 환경, 데이터 처리, 자동화, 게임 서버를 나눈 구성이다. VM마다 CPU·메모리·디스크와 주소를 배정하고, 저장소와 접속 경로를 연결해 왔다.\n\n개발 프로젝트와 이어지는 글부터 읽으려면 다음 순서가 좋다.\n\n1. [홈서버 구축 기록](#post/homelab-things-i-built) — 전체 구성을 네 주제로 정리한 안내.\n2. [PostgreSQL과 데이터 처리 VM](#post/postgresql-data-services-vm) — 데이터 서비스를 위한 환경 구성.\n3. [Tailscale과 SSH 접속](#post/tailscale-ssh-homelab) — 원격 경로와 실제 접속 결과.\n4. [온라인인 Discord 봇이 답하지 않던 이유](#post/hermes-development-vm) — 메시지 수신부터 CLI 호출까지 오류를 좁힌 과정.\n5. [WOL 포털과 Windows·Ubuntu 부팅](#post/wol-power-portal) — 전원 제어와 OS 전환을 연결하며 고친 문제.\n\n홈서버 글은 2026년 10월에 확인한 구성과 당시의 응답을 바탕으로 썼다. 소개에 목록이 있다고 해서 모든 서비스가 지금도 정상 운영된다는 뜻은 아니다. 각 글의 날짜와 마지막 확인 상태를 함께 읽으면 어떤 부분을 구현했고 무엇을 더 확인해야 하는지 구분할 수 있다.\n\n# 앞으로도 문제와 확인 결과를 함께 남기기\n\n이곳에서는 기능 이름이나 기술 목록만 나열하지 않으려고 한다. 어떤 상황에서 문제가 생겼는지, 원인을 어떻게 좁혔는지, 무엇을 바꾸고 어디까지 확인했는지를 함께 적는다.\n\n예를 들어 VM이 켜지는 것, SSH로 접속되는 것, 앱이 응답하는 것, 결과가 데이터베이스에 저장되는 것은 서로 다른 확인 단계다. AI 서비스에서는 모델이 문장을 반환하는 것에 더해, 그 문장이 현재 답변에서 나온 결과인지와 저장이 끝났는지도 확인해야 한다.\n\n다음 작업에서는 말씨의 실제 모델 검증 범위와 질문·생성·저장의 각 단계를 더 구체적으로 기록하고 싶다. 홈서버에서도 이미 확인한 설정과 접속이 막혀 남겨 둔 문제를 이어서 정리하려고 한다. 완료한 일과 아직 남은 일을 함께 남기는 것이 이 블로그의 기준이다.\n",
+      "featured": true,
+      "draft": false,
+      "template": false
+    },
+    {
+      "slug": "malssi-ai-conversation-recovery",
+      "title": "말씨 개발 기록: AI의 답변을 끝까지 전달하고 저장하기",
+      "date": "2026-11-26",
+      "description": "PostgreSQL·Gemma 연동부터 입력 보존, 질문과 카드 모델 분리, 답변 수정과 재시작에 대응하는 결과 작업까지.",
+      "tags": [
+        "프로젝트",
+        "AI·백엔드"
+      ],
+      "cover": "",
+      "image": "",
+      "language": "ko",
+      "translationKey": "malssi-ai-conversation-recovery",
+      "body": "2026년 11월 19일의 공개 소스와 내 변경 이력을 기준으로 정리한 개발 기록이다.\n\nAI 기능을 웹 서비스에 붙일 때 가장 먼저 눈에 들어오는 것은 모델이 만들어 낸 문장이다. 하지만 실제 사용 흐름을 만들다 보면 그 앞뒤의 일이 훨씬 많아진다. 사용자가 쓴 답변을 언제 저장할지, 모델 응답이 실패하면 어떤 상태로 돌아갈지, 질문을 수정하는 동안 예전 결과가 도착하면 무엇을 버릴지까지 정해야 한다.\n\n내가 참여한 **말씨**도 이런 문제를 다루는 프로젝트다. 어려움을 겪는 사람 곁의 가족이나 친구가 어떤 말과 행동을 준비할지 정리하도록 돕는 서비스다. 사용자가 목적과 상황을 설명하면 필요한 정보를 확인하고, 대화문과 행동 가이드를 카드로 제공한다. 이 글에서는 그 서비스를 구현하면서 내가 반영한 백엔드·모델 연동·대화 흐름·복구 작업을 기록한다.\n\n말씨는 팀 프로젝트다. 프로젝트 전체를 내 단독 작업으로 소개하기보다, [내 GitHub 계정](https://github.com/chihun1111)의 커밋에서 확인할 수 있는 변경을 중심으로 설명한다. 서비스의 목적과 현재 구성은 [프로젝트 README](https://github.com/seonizz/HOP_Biohealth_AI-Challenge/blob/d134a006ba6098afa63ef1477f193375eca36b6f/README.md)에서 볼 수 있다.\n\n# 화면과 모델 사이에 필요한 상태 만들기\n\n초기 연동 작업에서는 기존 UI에 PostgreSQL 백엔드와 Gemma 상태 에이전트를 연결했다. 이후에는 학습 모델의 JSON 응답과 질문 관리, 서버 기록을 연결하고, 모델 결과가 확인되기 전에 질문이 진행되는 문제와 실패 후 입력을 다시 다루는 흐름을 보완했다.\n\n이 과정에서 중요한 단위는 채팅 말풍선 하나가 아니라 **대화의 상태**였다. 사용자가 현재 어떤 질문에 답하고 있는지, 답변의 어느 판본을 모델이 읽었는지, 모델 결과를 반영해도 되는지, 마지막 가이드가 저장됐는지를 함께 관리해야 했다.\n\n예를 들어 사용자가 답변을 전송한 직후 모델 요청이 실패했다고 하자. 화면에서 입력을 없애는 것만으로 제출을 완료했다고 처리하면 사용자는 같은 내용을 다시 써야 한다. 반대로 원래 입력과 제출 상태를 보존하면 같은 답변으로 재시도할 수 있다. 요청이 중단된 뒤 화면을 이동하거나 다시 열어도, 지금 작성 중인 내용과 이미 저장한 내용을 구분할 수 있어야 한다.\n\n이런 문제는 [로컬 모델과 저장 대화 흐름을 안정화한 변경](https://github.com/seonizz/HOP_Biohealth_AI-Challenge/commit/95ea2391aff3ca9d05215c383b48bbb75220f8fa)과 [중단된 요청 뒤 초안·화면 이동을 보존한 변경](https://github.com/seonizz/HOP_Biohealth_AI-Challenge/commit/3168a23409469021c772cf62204faae31baf33c1)에 반영했다. 모델을 연결하는 작업이 화면, API, 데이터베이스의 상태를 함께 설계하는 일로 이어진 이유다.\n\n# 질문을 많이 하는 것보다 필요한 것을 묻기\n\n질문은행에 문항이 있다는 이유만으로 모든 문항을 순서대로 묻는 흐름은 사용자의 목적과 어긋날 수 있다. 한 번의 답변에 원하는 도움, 관계, 실제 상황이 이미 들어 있을 수도 있다. 이때 같은 내용을 다시 물으면 답변 부담만 늘어난다.\n\n최근에는 새 대화가 목적과 상황을 먼저 확인하고, 보통 2~4개 질문 안에서 필요한 정보를 얻도록 흐름을 바꿨다. 여기서 2~4개는 사용자 경험을 위한 목표다. 반드시 네 개를 채우는 규칙이 아니며, 모든 실제 모델 실행에서 그 수를 달성했다는 성능 수치도 아니다. 핵심은 **답을 알게 되면 결과가 실질적으로 달라지는 정보만 더 묻는 것**이다.\n\n현재 분리 모드의 질문 라우터는 세 가지 결정을 반환한다.\n\n| 결정 | 의미 |\n| --- | --- |\n| `existing` | 질문은행의 후보 중 필요한 문항 하나 선택 |\n| `custom` | 기존 문항으로 확인하기 어려운 정보를 짧게 추가 질문 |\n| `finish` | 현재 답변으로 결과를 준비할 수 있어 질문 종료 |\n\n질문을 고를 때는 근거가 된 답변의 ID, 원문의 연속된 인용, 그 정보가 필요한 이유도 반환하게 했다. 서버는 모델이 선택한 문항이 실제 후보인지, 인용이 현재 답변에 있는지, 이미 발행한 문항과 등록된 확인 범위가 중복되는지 검사한다. 관련 구현은 [질문 라우터](https://github.com/seonizz/HOP_Biohealth_AI-Challenge/blob/d134a006ba6098afa63ef1477f193375eca36b6f/app/src/split-question-router.js)와 [짧은 질문 흐름](https://github.com/seonizz/HOP_Biohealth_AI-Challenge/blob/d134a006ba6098afa63ef1477f193375eca36b6f/app/docs/COMPACT_QUESTIONS_2026-11-17.md)에 남겼다.\n\n질문을 줄이는 과정에서 반대 방향의 오류도 생길 수 있다. 사용자가 “상황을 정리하고 싶어요”라고 목적만 알려 줬는데, 정리할 상황까지 충분히 받았다고 판단해 버리는 경우다. 이 경우에는 상황 질문을 먼저 보여 주도록 보완했다. 선택형 입력과 “상황을 정리하고 싶어요.”라는 자유 입력을 검사하고, 이미 구체적 상황을 함께 적은 답변은 다시 묻지 않는 회귀 사례를 추가했다. [해당 수정](https://github.com/seonizz/HOP_Biohealth_AI-Challenge/commit/6bc95b2c46498aa51c28f4a8d1a851c76e1b0e00)은 질문 수를 줄이는 것과 필요한 맥락을 놓치지 않는 일을 함께 다뤄야 한다는 사례다.\n\n# 질문 모델과 최종 카드 모델을 분리하기\n\n다음 질문 하나를 고르는 작업과 전체 답변을 읽어 최종 카드를 만드는 작업은 필요한 문맥과 처리량이 다르다. 그래서 대화 모델과 분석·카드 모델을 나누어 선택하는 구조를 반영했다. 공개 구현에서는 12B와 31B 프로필을 제공하고, 분리 모드에서 질문 라우팅과 최종 생성이 서로 다른 경로를 사용한다.\n\n질문 단계는 최신 답변, 앞선 원문의 필요한 부분, 이미 표시한 질문, 다음 후보를 읽는다. 분리 모드의 모델 호출은 답변 제출당 최대 한 번으로 제한한다. 반면 최종 단계는 암호화해 저장한 대화의 원문을 읽고 기존 카드 생성과 검토를 수행한다. 질문 단계의 짧은 발췌를 최종 결과의 전체 근거처럼 사용하는 구조가 아니다.\n\n최종 카드 작업은 브라우저의 HTTP 요청과 분리했다. 사용자가 답변을 마치면 해당 답변 버전의 작업을 등록하고, 서버의 작업자가 결과를 만든다. 검토를 통과한 카드는 준비되는 순서대로 표시하고, 전체 결과와 기록은 데이터베이스에 저장한다.\n\n브라우저의 연결이 끊어졌다는 이유만으로 생성 결과를 잃지 않도록 하고, 저장 실패를 화면의 성공 표시와 혼동하지 않도록 만드는 것이 이 구조의 목적이다. 모델 크기를 나누었다는 사실만으로 속도나 품질이 보장되지는 않는다. 실제 이점은 동일한 입력과 실행 조건에서 별도로 확인해야 한다.\n\n이 변경은 [모델 역할 분리 커밋](https://github.com/seonizz/HOP_Biohealth_AI-Challenge/commit/9e1d4f6ab4a86a9f6b194c3bf83538a803455ff2)에 API, 관리자 설정, 마이그레이션, 질문 라우터, 결과 작업자, 회귀 검사와 함께 반영했다.\n\n# 늦게 도착한 결과를 저장하지 않기\n\n백그라운드 생성에서 까다로운 경우는 사용자가 기다리는 동안 답변을 수정하는 상황이다. 이전 답변을 읽고 시작한 모델이 뒤늦게 성공하더라도, 그 결과를 새 답변의 결과로 저장하면 안 된다.\n\n현재 결과 작업은 대화 ID와 소유자, 답변 버전, 실행 토큰을 기준으로 관리한다. 원문과 모델 출력을 작업 큐에 다시 복사하지 않고, 기존 암호화 대화 저장소를 참조한다. 답변이 바뀌면 이전 버전의 작업을 지우고 새로운 상태에 맞춰 등록한다.\n\n작업자는 데이터베이스에서 실행할 항목을 잠그고 가져온다. 구현에는 `FOR UPDATE SKIP LOCKED`가 사용되며, 실행 권한에 유효 시간을 두고 주기적으로 갱신한다. 결과를 저장할 때도 작업의 버전과 실행 권한이 유효한지 다시 확인한다. 프로세스가 중단되면 권한이 만료된 작업을 복구할 수 있고, 오래된 작업자가 나중에 돌아와도 현재 결과를 덮어쓰지 못하도록 경계를 둔다.\n\n이런 처리에서 “재시도하면 된다”는 말만으로는 부족하다. 무엇을 재시도하는지, 이전 실행과 새 실행을 어떻게 구분하는지, 중복 저장이나 잘못된 버전의 저장을 어디에서 막는지가 정해져 있어야 한다. [결과 작업자 코드](https://github.com/seonizz/HOP_Biohealth_AI-Challenge/blob/d134a006ba6098afa63ef1477f193375eca36b6f/app/src/split-result-jobs.js)는 그 경계를 다루는 구현이다.\n\n# 생성된 설명과 사용자의 원문을 구분하기\n\nAI가 만든 질문이나 설명이 어느 순간 사용자가 직접 말한 사실로 바뀌면, 다음 단계의 결과도 잘못된 전제를 따라가게 된다. 따라서 개인화된 질문은 원문 문항 ID와 수정번호, 인용 구간을 함께 갖도록 했다.\n\n서버는 인용을 현재 원문과 다시 대조한다. 사용자가 원문을 고치면 그 원문에서 파생된 추가 질문과 답변도 연쇄적으로 무효화한다. 사용자가 아직 답하지 않은 질문은 답변이 없는 상태로 남긴다. 질문을 건너뛰었다고 해서 그 답을 모델이 만들어 채우지 않는다.\n\n또한 질문 문구와 실제 사용자 답변은 저장 목적이 다르다. 어떤 질문을 보여 주었는지는 대화 이력을 설명하기 위한 데이터이고, 사용자가 보고한 사실의 근거는 실제 답변이다. 이 구분은 [개인화 질문의 저장·검증 계약](https://github.com/seonizz/HOP_Biohealth_AI-Challenge/blob/d134a006ba6098afa63ef1477f193375eca36b6f/app/docs/PERSONALIZED_QUESTIONS_2026-11-17.md)에 정리돼 있다.\n\n대화가 끝난 뒤 새로운 상황을 이어서 다루는 기능에서도 같은 원칙이 필요했다. [후속 대화와 카드 스냅샷 변경](https://github.com/seonizz/HOP_Biohealth_AI-Challenge/commit/36ba2783c2a508cc554b31d11478c6678d3fe54b)에서는 기존 기록을 기준으로 추가 대화를 만들고 새로운 결과를 저장하는 흐름을 API·화면·데이터베이스에 함께 반영했다. 이전 카드와 새 상황의 결과를 구분할 수 있도록 하는 작업이다.\n\n# 테스트 결과가 무엇을 뜻하는지 기록하기\n\nAI 서비스에서는 테스트가 통과했다는 말에도 범위가 필요하다. 합성 모델 응답으로 저장·복구 경로를 검사한 결과와, 실제 모델이 적절한 질문과 카드를 생성한 결과는 같은 증거가 아니다.\n\n이 프로젝트에서는 질문셋을 JSON으로 작성해 앱의 실제 문답·모델 호출 경로를 재현하는 실행기도 추가했다. 별도의 테스트용 질문 처리기를 만드는 대신 앱의 입력 검증과 상태 전이, 모델 게이트웨이를 재사용한다. 현재 질문에 대응하는 답변이 입력에 없으면 임의로 만들어 진행하지 않고 `awaiting_input` 상태로 멈춘다.\n\n보고서에는 입력과 소스 식별 정보, 기대값과 실제 결과, 호출 수, 오류와 실행 상태를 남긴다. 여기서도 모델 설정을 조회한 HTTP 요청과 실제 생성 요청을 구분하고, 확인되지 않은 토큰 수를 임의로 채우지 않는다. [질문셋 모델 테스트 실행기](https://github.com/seonizz/HOP_Biohealth_AI-Challenge/commit/1840354e1d2a2a81c7366741e890245190b7f49b)와 [사용 규격](https://github.com/seonizz/HOP_Biohealth_AI-Challenge/blob/d134a006ba6098afa63ef1477f193375eca36b6f/ai/docs/MODEL_QUESTION_TESTS.md)에 그 기준을 남겼다.\n\n11월 18일의 모델 역할 분리 문서에는 로컬 12B의 합성 대화 실행과, 합성 결과 모델을 연결한 PostgreSQL 검사 결과가 각각 기록돼 있다. 후자는 부분 카드 전달, 연결 종료 이후 완료, 답변 수정에 따른 작업 무효화, 장애 재시도, 재시작 복구, 암호화 기록 저장과 재조회를 확인한 범위다. 실제 31B의 최종 생성·검토 시간과 카드 품질은 해당 문서에서 실측 전으로 구분했다. 이 글을 작성하며 그 검사를 다시 실행한 것은 아니며, 공개된 당시의 [검증 기록](https://github.com/seonizz/HOP_Biohealth_AI-Challenge/blob/d134a006ba6098afa63ef1477f193375eca36b6f/app/docs/MODEL_SELECTION.md)을 기준으로 설명한다.\n\n# 다음에 더 확인할 것\n\n현재 구현을 바탕으로 다음 단계에서 확인할 것은 분명하다. 실제 모델이 상황을 충분히 이해했을 때 질문을 끝내는지, 필요한 질문을 놓치거나 같은 내용을 되묻지 않는지, 마지막 카드가 검토와 저장까지 완료되는지를 같은 실행 안에서 확인해야 한다.\n\n질문 단계의 응답 시간만으로 전체 사용자 경험을 설명하지 않고, 최종 생성·검토·저장까지 구간을 나눠 볼 필요도 있다. 자동 회귀 검사와 별도로 사람이 질문의 적절성과 원문에 없는 사실의 포함 여부를 검토하는 과정도 남아 있다. 기능 구현과 실모델 검증, 실제 사용 환경의 확인 상태를 계속 구분해 기록하려고 한다.\n\n말씨 작업은 내게 웹 개발과 서버 운영이 만나는 지점을 보여 준다. 화면에 답변이 보이는 순간뿐 아니라, 요청이 실패하고 연결이 끊기고 입력이 바뀌는 순간에도 대화의 의미와 기록이 유지돼야 한다. 앞으로 이 블로그에는 이런 구체적인 문제, 구현한 경계, 확인한 결과와 남은 한계를 함께 기록한다.\n\n# 관련 링크\n\n- [HOP Biohealth AI Challenge / 말씨 저장소](https://github.com/seonizz/HOP_Biohealth_AI-Challenge)\n- [chihun1111의 프로젝트 커밋](https://github.com/seonizz/HOP_Biohealth_AI-Challenge/commits/main/?author=chihun1111)\n- [내 GitHub](https://github.com/chihun1111)\n",
+      "featured": false,
+      "draft": false,
+      "template": false
+    },
+    {
+      "slug": "ctf-platform-auth-submission-operations",
+      "title": "CTF 플랫폼을 만들며 배운 인증·제출·운영의 경계",
+      "date": "2026-11-26",
+      "description": "Next.js·NestJS와 PostgreSQL을 중심으로 개인별 플래그, 인증, 제출 트랜잭션, 감사 기록과 Docker 운영 구조를 정리했습니다.",
+      "tags": [
+        "프로젝트",
+        "웹·보안"
+      ],
+      "cover": "",
+      "image": "",
+      "language": "ko",
+      "translationKey": "ctf-platform-auth-submission-operations",
+      "body": "CTF 대회를 위한 웹 페이지를 만들고, 서버 구축부터 배포까지 직접 맡았다. 참가자가 문제를 열고 정답을 제출하는 화면뿐 아니라, 운영자가 진행 상황과 제출 내역을 확인하는 기능도 함께 구현했다. 이 경험을 통해 개발과 서버 운영은 같은 서비스의 서로 다른 면이라는 점을 구체적으로 다루게 됐다.\n\n이 글은 그 개발 경험을 출발점으로, **2026년 11월 16일 보강된 공개 저장소의 현재 구조**를 정리한 기록이다. 앞서 만들고 배포했던 경험과 이후 보강한 구현은 구분한다. 아래 설명은 과거 운영 환경이 모두 이 구조였다는 뜻이 아니라, 현재 코드에서 확인할 수 있는 설계와 남아 있는 운영 과제를 다룬다. [코드 기준: c042607](https://github.com/chihun1111/CTF_KDU/tree/c042607b76563c51f99758901d120d92f2f6b8af)\n\n# 문제 화면과 운영 플랫폼을 함께 설계하기\n\n현재 플랫폼은 Next.js 프런트엔드, NestJS 백엔드, PostgreSQL, Redis, Nginx, 그리고 8개의 문제 서비스로 구성된다. TypeScript 모노레포 안에 화면과 API, 공통 설정, Drizzle 데이터베이스 스키마를 두고, Docker Compose로 실행 환경을 정의했다.\n\n참가자는 로그인한 뒤 문제 목록에서 각 문제로 바로 이동한다. 찾은 플래그는 일부만 먼저 제출해 확인할 수 있고, 최종 완료에는 개인에게 발급된 8개의 플래그를 한 번에 제출한다. 운영자는 가입·제출·완료 현황과 문제 서비스 상태를 확인한다. 이 흐름에서 핵심은 “누가 요청했는가”, “어떤 문제의 자료인가”, “이번 제출로 무엇이 바뀌는가”를 서버가 일관되게 판단하는 것이다. [프로젝트 구성과 참가 흐름](https://github.com/chihun1111/CTF_KDU/blob/c042607b76563c51f99758901d120d92f2f6b8af/README.md)\n\n# 서비스의 역할을 나누고 데이터에 닿는 경로를 좁히기\n\n문제 서비스에는 학습을 위한 취약한 동작이 들어간다. 그래서 참가자 계정, 정답 검증, 관리자 기능을 담당하는 플랫폼과 문제 서비스 사이의 경계가 중요하다.\n\n현재 Compose 구성에서는 Nginx만 호스트 포트를 공개한다. PostgreSQL과 Redis는 내부 데이터 네트워크에 있고, 문제 컨테이너에는 데이터베이스 비밀번호나 전체 플래그 암호화 키를 전달하지 않는다. 문제 서비스는 자기 번호에 해당하는 내부 서비스 토큰으로 백엔드에 필요한 정보를 요청한다.\n\n| 영역 | 담당하는 일 | 접근 범위 |\n| --- | --- | --- |\n| Nginx | 화면·API·문제 경로로 요청 전달 | 외부 요청의 진입점 |\n| 프런트엔드 | 참가자와 운영자의 화면 | 애플리케이션 네트워크 |\n| 백엔드 | 인증·개인별 플래그·제출·운영 API | 애플리케이션·문제·데이터 네트워크 |\n| 문제 서비스 | 각 문제의 화면과 실습 동작 | 문제 네트워크와 자기 서비스 토큰 |\n| PostgreSQL·Redis | 영속 데이터와 접속 현황 캐시 | 내부 데이터 네트워크 |\n\n여기서 정확히 구분할 점이 있다. 문제마다 컨테이너는 따로 있지만, 8개 문제 서비스는 같은 `ctf_challenges` 네트워크를 공유한다. 따라서 현재 구조를 문제 간 네트워크 통신까지 완전히 차단한 구성이라고 설명할 수는 없다. 컨테이너 분리, 데이터 네트워크 분리, 서비스 토큰의 권한 검증이 각각 어떤 범위를 담당하는지 나누어 보는 것이 맞다. [Docker Compose 구성](https://github.com/chihun1111/CTF_KDU/blob/c042607b76563c51f99758901d120d92f2f6b8af/infra/docker/docker-compose.yml)\n\nNginx는 외부의 `/internal/` 요청을 차단하고, 클라이언트가 보낸 사용자 식별·내부 서비스 관련 헤더를 제거한다. 프록시가 전달했다는 이유만으로 임의의 헤더를 신뢰하지 않도록 진입점에서 한 번 정리하는 것이다. `X-Forwarded-For`도 클라이언트의 값을 이어 붙이지 않고 직접 연결한 주소로 설정한다. 이 선택은 나중에 외부 TLS 프록시를 추가할 때 다시 검토해야 하는 운영 조건이 된다. [Nginx 설정](https://github.com/chihun1111/CTF_KDU/blob/c042607b76563c51f99758901d120d92f2f6b8af/infra/nginx/nginx.conf)\n\n# 인증 정보를 저장할 때 목적부터 나누기\n\n비밀번호, 세션 토큰, 플래그는 모두 민감한 값이지만 필요한 처리 방식은 다르다. 비밀번호는 일치 여부를 확인하면 되고, 세션 토큰은 활성 세션을 찾는 데 쓰며, 플래그는 정답 비교뿐 아니라 문제 서비스에 전달할 원문도 필요하다.\n\n현재 구현은 이 차이를 저장 방식에 반영한다.\n\n- **비밀번호:** 용도를 구분하는 접두 문자열을 붙여 SHA-256으로 전처리한 뒤 bcrypt로 저장한다. 해시에 버전 접두어를 남겨 기존 bcrypt 레코드와 구분한다.\n- **세션 토큰:** 브라우저에는 임의 토큰을 발급하고, 서버에서는 HMAC으로 계산한 값으로 세션을 찾는다. 만료 시각과 폐기 여부를 함께 확인한다.\n- **플래그:** 정답 비교용 HMAC과, 내부 서비스에 원문을 제공할 때 사용하는 암호문을 따로 보관한다. 암호화 함수는 AES-256-GCM을 사용하며 키 버전도 함께 기록한다.\n\n비밀번호 전처리는 bcrypt에 넘기는 입력을 고정 길이로 만들어 긴 입력의 구분을 유지하려는 구현이다. 기존 bcrypt 해시는 별도 분기로 검증하므로, 과거 레코드의 입력 길이 제약까지 자동으로 해소되는 것은 아니다. 현재 가입·로그인 입력 정책도 영문과 숫자 8~128자로 제한되어 있다. 이 정책은 현재 프로젝트의 제약으로 기록하며, 모든 서비스에 그대로 적용할 권장안으로 보지는 않는다. [비밀번호 해시 구현](https://github.com/chihun1111/CTF_KDU/blob/c042607b76563c51f99758901d120d92f2f6b8af/apps/backend/src/auth/password-hash.service.ts) · [암호 처리](https://github.com/chihun1111/CTF_KDU/blob/c042607b76563c51f99758901d120d92f2f6b8af/apps/backend/src/crypto/crypto.service.ts) · [공통 암호 함수](https://github.com/chihun1111/CTF_KDU/blob/c042607b76563c51f99758901d120d92f2f6b8af/packages/config/src/index.ts)\n\n세션 쿠키에는 `HttpOnly`, `Secure`, `SameSite=Lax`를 설정한다. 실제 사용자와 역할은 쿠키 안의 임의 값을 그대로 믿는 대신, 데이터베이스의 활성 세션과 사용자 레코드를 조회해 결정한다. 상태를 바꾸는 플랫폼 API에는 브라우저의 Origin과 Fetch Metadata를 확인하는 가드도 둔다. 다만 같은 출처 검사와 사용자 인증은 서로 다른 검증이다. 헤더가 없는 서버 간 요청에도 기존 인증·권한 검사가 필요하다. [세션 조회](https://github.com/chihun1111/CTF_KDU/blob/c042607b76563c51f99758901d120d92f2f6b8af/apps/backend/src/auth/session-auth-drizzle.store.ts) · [쿠키 설정](https://github.com/chihun1111/CTF_KDU/blob/c042607b76563c51f99758901d120d92f2f6b8af/apps/backend/src/auth/session-cookie.service.ts) · [Origin 가드](https://github.com/chihun1111/CTF_KDU/blob/c042607b76563c51f99758901d120d92f2f6b8af/apps/backend/src/auth/api-origin.guard.ts)\n\n# 개인별 플래그는 서비스와 참가자를 함께 확인한다\n\n회원가입 시에는 각 문제에 사용할 플래그를 별도로 생성한다. 사용자 생성, 동의 기록, 개인별 플래그 저장, 세션 생성은 하나의 트랜잭션에 묶인다. 활성 문제 8개의 초기 데이터가 온전하지 않으면 가입을 중단하도록 되어 있어, 계정만 만들어지고 풀이에 필요한 데이터가 빠지는 상태를 피하려는 구조다. 데이터베이스에도 사용자·문제 조합의 고유 제약을 둔다. [가입 처리](https://github.com/chihun1111/CTF_KDU/blob/c042607b76563c51f99758901d120d92f2f6b8af/apps/backend/src/auth/auth-registration.service.ts) · [플래그 발급](https://github.com/chihun1111/CTF_KDU/blob/c042607b76563c51f99758901d120d92f2f6b8af/apps/backend/src/flags/flag-issuance.service.ts) · [데이터 스키마](https://github.com/chihun1111/CTF_KDU/blob/c042607b76563c51f99758901d120d92f2f6b8af/packages/db/src/schema.ts)\n\n문제 서비스가 내부 API로 플래그를 요청할 때는 두 가지를 확인한다. 먼저 요청한 문제 번호에 맞는 서비스 토큰인지 검사하고, 이어 참가자의 세션이 유효한지 확인한다. 조회 대상 사용자는 이 세션에서 얻으며, 그 사용자와 해당 문제의 조합으로 플래그를 찾는다.\n\n서비스 토큰은 “어느 문제 서비스인가”를 확인하고, 참가자 세션은 “누구의 자료인가”를 확인한다. 한쪽 정보만으로 다른 쪽 권한까지 대신하지 않게 구성한 부분이다. [내부 플래그 API](https://github.com/chihun1111/CTF_KDU/blob/c042607b76563c51f99758901d120d92f2f6b8af/apps/backend/src/internal/internal-flag.service.ts)\n\n# 정답 판정과 제출 기록을 같은 작업으로 다루기\n\n제출 API는 입력 형식과 허용된 플래그 항목을 검사한 뒤, 로그인한 사용자의 정답 해시를 조회한다. 제출한 값은 그 사용자의 플래그들과 비교하며, 같은 정답을 여러 칸에 넣어도 여러 문제의 정답으로 중복 계산하지 않도록 이미 맞춘 항목을 추적한다.\n\n그다음 제출 요약, 문제별 결과, 감사 기록을 같은 데이터베이스 트랜잭션 안에 저장한다. 8개를 모두 맞춘 경우에는 완료 기록과 인증 화면용 토큰도 이 작업 안에서 생성한다. 정답 판정은 성공했지만 완료 기록이 없거나, 제출 내역과 감사 기록이 서로 어긋나는 상태를 줄이기 위해 함께 성공하거나 함께 실패해야 하는 범위를 정한 것이다. [제출 서비스](https://github.com/chihun1111/CTF_KDU/blob/c042607b76563c51f99758901d120d92f2f6b8af/apps/backend/src/submissions/final-submit.service.ts) · [트랜잭션 저장소](https://github.com/chihun1111/CTF_KDU/blob/c042607b76563c51f99758901d120d92f2f6b8af/apps/backend/src/submissions/final-submit-drizzle.store.ts)\n\n부분 제출의 의미도 명확해야 한다. 현재 점수는 최근 제출의 결과이고, 여러 번에 나눠 맞춘 값이 자동으로 합쳐져 최종 완료가 되는 방식은 아니다. 한 번 완료한 사실은 별도 완료 테이블에 남는다. 따라서 운영 화면의 “최근 정답 수”와 “완료 여부”는 서로 다른 질문에 답하는 값이다. 완료 후 다른 조합을 제출했을 때도 이 두 값을 혼동하지 않아야 한다. [운영 조회의 최근 제출·완료 구분](https://github.com/chihun1111/CTF_KDU/blob/c042607b76563c51f99758901d120d92f2f6b8af/apps/backend/src/admin/admin-operations-drizzle.store.ts)\n\n완료 인증 화면을 여는 토큰에는 5분 만료 시간을 둔다. 소비할 때는 사용자, 토큰 해시, 만료 여부, 미사용 상태를 확인하고, `consumedAt`이 아직 비어 있는 행만 갱신한다. 실제로 갱신된 행이 하나일 때만 인증 정보를 반환한다. 먼저 조회한 뒤 단순히 사용 처리하는 것에 그치지 않고, 갱신 조건에도 미사용 여부를 넣은 것이 동시 요청을 다루는 핵심이다.\n\n여기서 “한 번”은 **해당 인증 토큰을 한 번 소비한다는 뜻**이다. 이후 8개 정답을 다시 제출하면 새 토큰이 발급될 수 있으므로, 계정이 평생 인증 화면을 딱 한 번만 볼 수 있다는 의미와는 다르다. [인증 토큰 소비 처리](https://github.com/chihun1111/CTF_KDU/blob/c042607b76563c51f99758901d120d92f2f6b8af/apps/backend/src/submissions/clear-certificate-drizzle.store.ts)\n\n# 운영 화면에는 판단에 필요한 정보만 남기기\n\n운영자에게 필요한 것은 참가자가 어디까지 진행했는지, 제출이 정상적으로 처리되는지, 특정 서비스가 응답하는지다. 현재 운영 목록은 참가자를 가명 참조로 표시하고 최근 정답 수, 제출 횟수, 완료 여부 등을 보여 준다. 관리자 계정의 연습 데이터는 참가자 통계에서 제외한다.\n\n감사 로그도 데이터베이스의 JSON을 그대로 화면에 보내지 않는다. 동작별로 허용할 필드를 정하고, 허용된 기본 자료형만 꺼내 전달한다. 예를 들어 최종 제출 로그에는 정답 수와 제출 수, 완료 여부를 남기지만 제출한 플래그 원문을 넣지 않는다. 이 가명 참조는 운영상 노출을 줄이는 수단이지, 모든 데이터 연결 가능성을 없애는 완전한 익명화라는 의미는 아니다. [운영 서비스와 감사 메타데이터 처리](https://github.com/chihun1111/CTF_KDU/blob/c042607b76563c51f99758901d120d92f2f6b8af/apps/backend/src/admin/admin-operations.service.ts)\n\nRedis의 역할도 구분했다. 세션 인증의 기준 데이터는 PostgreSQL에 있고, Redis는 최근 접속 현황을 계산하는 캐시로 사용한다. Redis를 사용할 수 없거나 캐시에서 유효한 수를 얻지 못하면, 데이터베이스에 남은 최근 세션 활동으로 접속 현황을 계산한다. 응답에는 집계 출처와 시간 범위도 포함한다. 표시되는 값은 최근 활동 기준의 **세션 수**이므로, 고유 참가자 수나 바로 그 순간 연결된 사람 수와 동일하다고 해석하지 않는다. [접속 현황과 DB 대체 경로](https://github.com/chihun1111/CTF_KDU/blob/c042607b76563c51f99758901d120d92f2f6b8af/apps/backend/src/presence/online-count.service.ts)\n\n# 배포는 실행 명령 이후까지 이어진다\n\n현재 운영 문서에는 설치와 빌드뿐 아니라 데이터베이스 초기화, 배포 전 점검, 사용자 흐름 확인, 백업·복원, 비밀값 교체가 포함되어 있다. 서버를 직접 다루면서 남겨야 할 기록도 이 순서와 닮아 있다. “켜졌다”는 사실 다음에, 데이터가 유지되는지와 문제가 생겼을 때 돌아갈 수 있는지를 확인해야 한다.\n\n특히 다음 조건은 코드와 실제 운영 환경을 연결한다.\n\n- **HTTPS와 프록시:** 세션 쿠키는 `Secure`인데 기본 Nginx 진입점은 HTTP다. 외부 서비스에는 TLS 구성이 필요하며, 프록시를 한 겹 더 둘 때는 실제 클라이언트 IP 처리와 속도 제한 기준을 함께 검토해야 한다.\n- **데이터와 암호화 키:** 데이터베이스 백업만으로 복원이 끝나지 않는다. 암호화 키와 조회용 비밀값을 잃거나 임의로 바꾸면 기존 데이터 복호화와 해시 조회에 영향을 준다. 백업과 키 보관, 교체 절차는 함께 설계해야 한다.\n- **파일 권한과 실행 사용자:** 비밀값 파일의 읽기 권한은 컨테이너 실행 사용자와 맞아야 한다. 현재 일부 서비스는 이 호환성을 위해 root 실행과 제한된 capability를 유지한다. 비특권 사용자 전환을 확대하려면 파일 소유권과 볼륨 권한부터 정리해야 한다.\n- **리허설 데이터:** 사용자 흐름 검사 스크립트는 계정을 만들고, 일부는 운영자 권한이나 공개 힌트를 변경한다. 운영 데이터베이스에서 무심코 실행할 점검이 아니므로 별도 환경에서 수행하는 절차가 필요하다.\n\n검증 문서에는 코드 테스트, 컨테이너를 띄운 통합 확인, 브라우저 확인의 범위가 따로 적혀 있다. 이 글을 위해 코드를 읽은 것과 새로운 서버에서 전체 리허설을 수행한 것은 구분한다. 여기서는 특정 동시 접속 규모나 가용성, 모든 공격에 대한 방어를 검증했다고 주장하지 않는다. [설치·운영·백업·비밀값 교체 가이드](https://github.com/chihun1111/CTF_KDU/blob/c042607b76563c51f99758901d120d92f2f6b8af/docs/operations.md)\n\n# 다음 보강에서 확인할 것\n\n현재 운영 계약은 백엔드와 각 문제 서비스를 단일 인스턴스로 실행하는 구성이다. 인증 속도 제한과 일부 문제 상태가 프로세스 메모리에 있으므로 복제본을 늘리면 공유 상태나 요청 배치 방식부터 다시 설계해야 한다. 컨테이너 수를 늘리는 작업만으로 확장이 끝나지 않는다.\n\n비밀번호 재설정 화면, 암호화 키 이전 도구, 예상 참가자 수를 기준으로 한 부하 리허설도 별개의 과제다. 개인별 플래그와 데이터 경계를 마련한 것에 이어, 실제 규모에서 자원이 어떻게 사용되고 장애 시 무엇이 유지되는지 확인할 필요가 있다. 현재 운영 문서가 이 범위를 남겨 두고 있다는 점까지 함께 기록하고 싶다. [현재 운영 경계](https://github.com/chihun1111/CTF_KDU/blob/c042607b76563c51f99758901d120d92f2f6b8af/docs/operations.md#6-현재-운영-경계)\n\nCTF 플랫폼을 통해 남길 수 있었던 경험은 화면 구현, 인증과 데이터 모델링, 배포 설정, 운영자의 확인 흐름까지 하나의 서비스로 연결해 본 일이다. 앞으로도 프로젝트를 소개할 때 사용한 기술 이름과 함께, 그 기술을 어디에 두었고 어떤 상태를 지키기 위해 그렇게 구성했는지 기록하려 한다.\n\n[CTF 플랫폼 소스 코드](https://github.com/chihun1111/CTF_KDU) · [내 GitHub](https://github.com/chihun1111)\n",
+      "featured": false,
+      "draft": false,
+      "template": false
+    },
     {
       "slug": "n8n-automation-vm",
       "title": "n8n을 올려 쓴 전용 VM, 자원과 네트워크 설정",
@@ -157,7 +393,7 @@
       "language": "ko",
       "translationKey": "homelab-things-i-built",
       "body": "내 홈서버는 Proxmox 위에 저장소, 자동화, 게임 서버, 개발 환경을 나눠 둔 구성이다. VM을 만들고 서비스를 올리면서 해본 작업을 네 가지 주제로 묶었다. 각 글에는 실제 설정과 수정 과정을 따로 남겼다.\n\nVM 설정은 [Ubuntu 템플릿](#post/ubuntu-vm-template)부터 보면 기본 구성이 드러난다. [TrueNAS 구성](#post/proxmox-truenas-setup)에는 디스크와 공유, 백업을 연결한 방식이 담겨 있다.\n\n# 서버 설정\n\n[홈서버 VM마다 CPU와 메모리를 다르게 둔 구성](#post/proxmox-vm-cpu-memory)\n\nVM 열 개의 자원 배정과 CPU 유형을 비교하고, q35·OVMF·SeaBIOS 설정을 구분했다.\n\n[Proxmox VM 디스크, local-lvm과 VirtIO SCSI 설정](#post/proxmox-vm-disks)\n\n시스템 디스크와 물리 데이터 디스크, 컨트롤러·discard·I/O 스레드·백업 제외 옵션을 다룬다.\n\n[VM 네트워크를 vmbr0에 연결하고 Cloud-Init 주소를 나눴다](#post/proxmox-vm-network-cloud-init)\n\n공통 브리지와 VirtIO NIC, DHCP·고정 주소, Cloud-Init 매체의 연결 관계를 정리했다.\n\n[NAS부터 시작하도록 둔 VM 부팅 순서](#post/proxmox-vm-startup-order)\n\n자동 시작 여부와 시작 순서·대기 시간, VM 안의 부팅 장치, 게스트 에이전트의 응답을 구분했다.\n\n[새 VM의 바탕으로 남겨 둔 Ubuntu 템플릿](#post/ubuntu-vm-template)\n\n10G 시스템 디스크와 Cloud-Init 드라이브를 붙인 Ubuntu 24.04 템플릿이다. 개발·데이터 VM의 주소와 자원 설정도 비교했다.\n\n# NAS·서비스\n\n[Proxmox에 올린 TrueNAS, 실제 디스크와 공유 구성](#post/proxmox-truenas-setup)\n\n로컬 부팅 디스크와 물리 데이터 디스크를 나누고, ZFS 풀·SMB 공유·VM 백업 저장소를 연결한 구성이다.\n\n[TrueNAS에 Nextcloud를 올리고 파일과 DB 저장 공간을 나눴다](#post/nextcloud-truenas-files)\n\n파일 데이터는 `nc_pool`에, 앱과 데이터베이스는 앱 관리 볼륨에 연결했다. 백그라운드 작업과 상태 API 응답까지 다룬다.\n\n[TrueNAS에 Immich를 올린 구성, 사진 저장소와 머신러닝 서비스](#post/immich-truenas-photos)\n\n사진 데이터는 `tank`에 두고 서버·데이터베이스·머신러닝 서비스를 함께 실행하는 구성이다.\n\n[TrueNAS에 Netdata를 붙여 서버 상태를 보는 환경 만들기](#post/netdata-truenas-monitoring)\n\nNAS 안의 모니터링 앱과 19999 포트, 저장 볼륨, 수집 옵션을 정리했다.\n\n[PostgreSQL과 데이터 처리 서비스를 한 VM에 모았다](#post/postgresql-data-services-vm)\n\nPostgreSQL과 네 처리 서비스를 함께 둔 환경이다. Cloud-Init의 고정 주소 설정과 로컬 디스크 구성을 다룬다.\n\n# 자동화·접속\n\n[n8n을 올려 쓴 전용 VM, 자원과 네트워크 설정](#post/n8n-automation-vm)\n\n2코어·6GiB·60G VM에 고정 주소와 Cloud-Init, 자동 시작 순서를 둔 구성이다. VM 전원 상태와 앱에 접속할 수 있는 상태도 구분했다.\n\n[WOL 포털로 PC를 켜고 Windows·Ubuntu 부팅까지 연결하기](#post/wol-power-portal)\n\n브로드캐스트 수정과 패킷 재전송부터 Windows 준비 대기, 일회성 Ubuntu 부팅, OS별 전원 명령을 고쳐 온 과정이다.\n\n[Tailscale과 SSH로 홈서버에 접속하기](#post/tailscale-ssh-homelab)\n\n개발용 VM으로 직접 접속하는 경로와 Proxmox 호스트를 거치는 경로, 접속 상태와 애플리케이션 상태의 차이를 다룬다.\n\n[Proxmox에 Home Assistant VM을 올려 봤다](#post/home-assistant-vm)\n\n2코어·4GiB VM에 Core, Supervisor, Matter와 원격 접속용 구성을 올렸다. SATA 부팅 디스크와 NAS 뒤에 시작하도록 둔 설정도 함께 정리했다.\n\n[온라인인 Discord 봇이 답하지 않던 이유](#post/hermes-development-vm)\n\n자체 Discord bridge의 메시지 수신·답변 전송·CLI 호출 오류를 고친 과정부터 공식 Hermes 설치와 이후 VM 상태까지 이어 썼다.\n\n# 게임 서버\n\n[게임 관리 VM에 MinCrafty 패널을 올려 봤다](#post/mincrafty-game-panel)\n\n4코어·6GiB·80G VM에 웹 관리 패널을 올리고 8443 포트 응답과 대시보드 리다이렉트를 확인한 내용이다.\n\n[MinCrafty 안에 ATM10 모드팩 서버를 올려 봤다](#post/atm10-mincrafty-server)\n\n패널 안에서 ATM10을 구성해 본 경험이다. VM·관리 패널·모드팩의 역할과 서버팩 버전, Java, 게임 접속을 구분했다.\n",
-      "featured": true,
+      "featured": false,
       "draft": false,
       "template": false
     },
@@ -283,7 +519,7 @@
       "language": "ko",
       "translationKey": "proxmox-vm-cpu-memory",
       "body": "내 홈서버의 VM은 모두 같은 크기가 아니다. NAS에는 메모리 24GiB를, 개발용 VM에는 8GiB를 할당해 뒀고, Ubuntu 템플릿은 2GiB다. 서비스 이름뿐 아니라 가상 하드웨어 설정도 서로 다르게 남아 있다.\n\n# VM 10개에 배정한 자원\n\n2026년 10월 22일 기준 CPU·메모리 설정과 전원 상태다. 메모리는 `memory` 값을 MiB에서 GiB로 환산했다. 설정된 크기이므로 현재 사용량을 나타내는 표는 아니다.\n\n| VM | 코어 수 | CPU 유형 | 메모리 | 상태 |\n| --- | --- | --- | --- | --- |\n| NAS | 6 | `host` | 24GiB | 실행 중 |\n| LiteKernel | 4 | `host` | 8GiB | 중지 |\n| 개발용 Hermes | 4 | `x86-64-v2-AES` | 8GiB | 실행 중 |\n| WOL | 2 | `host` | 4GiB | 실행 중 |\n| Home Assistant | 2 | `host` | 4GiB | 중지 |\n| n8n | 2 | `host` | 6GiB | 중지 |\n| 데이터 처리 | 2 | `host` | 6GiB | 실행 중 |\n| MinCrafty | 4 | `host` | 6GiB | 중지 |\n| Linux Mint | 8 | `host` | 16GiB | 중지 |\n| Ubuntu 템플릿 | 2 | `x86-64-v2-AES` | 2GiB | 중지 |\n\n소켓 수는 대부분 `sockets: 1`로 명시돼 있다. Home Assistant에는 소켓 항목이 생략돼 있으며 Proxmox의 기본값도 1이다. 그래서 이 구성에서는 표의 코어 수가 VM의 vCPU 수와 같다. 물리 CPU 코어를 그 수만큼 해당 VM에 전용으로 고정했다는 뜻은 아니다. [CPU·소켓 설정](https://github.com/proxmox/pve-docs/blob/master/generated/qm.conf.5-opts.adoc)\n\nNAS의 자원 설정을 펼치면 아래와 같다.\n\n```text\ncores: 6\nsockets: 1\ncpu: host\nmemory: 24576\nnuma: 0\n```\n\nVM 목록에 남아 있는 모든 메모리 값을 더해 현재 호스트의 사용량으로 볼 수도 없다. 중지된 VM과 템플릿이 포함돼 있고, 실행 중인 VM의 메모리 사용량 역시 할당값과 별개의 관측치다.\n\n# 코어 수와 CPU 유형은 다른 설정이다\n\n대부분은 `cpu: host`지만 개발용 VM과 Ubuntu 템플릿에는 `x86-64-v2-AES`가 들어 있다. 코어 수는 가상 CPU의 개수이고, CPU 유형은 게스트에 보여 주는 CPU 기능과 관련된 설정이다. `host`는 호스트 CPU의 기능을 노출하는 방식이다. [Proxmox CPU 유형 설명](https://github.com/proxmox/pve-docs/blob/master/qm.adoc#cpu-type)\n\n현재 값만으로 내가 서로 다른 유형을 선택했던 이유나 성능 차이까지 알 수는 없다. 개발 VM의 작업 기록에는 처음 메모리가 16GB였다는 내용이 있고 현재는 8GiB로 남아 있지만, 변경 이유와 시점은 기록돼 있지 않다. 자원이 달라졌다는 사실과 변경 의도는 나눠 적었다.\n\n# q35와 펌웨어도 따로 봐야 한다\n\n열 개 VM의 머신 유형은 모두 `q35`다. 펌웨어는 개발용 VM만 `seabios`이고 나머지는 `ovmf`다. 머신 유형과 펌웨어는 별도 항목이며, `q35`라는 값만으로 UEFI 부팅이라고 판단할 수 없다. OVMF는 UEFI 구현이다. [머신 유형과 펌웨어](https://github.com/proxmox/pve-docs/blob/master/qm.adoc#system-settings)\n\n개발용 VM에는 `efidisk0`도 남아 있다. 그런데 실제 `bios` 값은 SeaBIOS다. EFI 디스크가 보인다는 이유만으로 OVMF를 사용한다고 읽으면 이 VM의 설정을 잘못 설명하게 된다.\n\n```text\n개발용 VM\nmachine: q35\nbios: seabios\n\nUbuntu 템플릿\nmachine: q35\nbios: ovmf\n```\n\n# VM 메모리와 앱 메모리를 섞지 않는다\n\nMinCrafty의 6GiB는 VM 전체에 배정한 메모리다. [ATM10](#post/atm10-mincrafty-server)의 Java 최대 힙을 6GiB로 지정했다는 뜻은 아니다. NAS의 24GiB 역시 그 안의 Nextcloud와 Immich에 각각 24GiB씩 배정한 값이 아니다.\n\n내 환경은 `Proxmox의 VM 자원 → 게스트 운영체제 → 앱 또는 게임 프로세스`로 이어진다. 어떤 메모리 값을 보고 있는지 먼저 구분해야 VM 설정과 앱 실행 옵션을 비교할 수 있다.\n\n[VM 디스크 연결과 옵션](#post/proxmox-vm-disks) · [홈서버 글 목록](#post/homelab-things-i-built)\n",
-      "featured": true,
+      "featured": false,
       "draft": false,
       "template": false
     },
@@ -413,7 +649,7 @@
       "language": "ko",
       "translationKey": "proxmox-truenas-setup",
       "body": "홈랩에서 Proxmox에 TrueNAS를 VM으로 올려 쓰고 있다. 한 서버 안에서 가상머신과 NAS가 함께 돌아가다 보니, 어떤 공간에 무엇을 두느냐에 따라 부팅과 백업의 의존 관계도 달라진다.\n\n사용 중인 버전은 **Proxmox VE 9.2.11과 TrueNAS 25.10.5**다. 아래는 2026년 10월 18일 기준의 구성이다.\n\n# TrueNAS가 먼저 켜질 수 있게\n\nTrueNAS의 부팅·EFI 디스크는 호스트 NVMe의 `local-lvm`에 있다. LVM-thin 볼륨으로 부팅 공간을 로컬에 두면, NAS를 켜기 위해 NAS 공유부터 열어야 하는 상황을 피할 수 있다.\n\n| 항목 | 설정 |\n| --- | --- |\n| CPU | 1소켓 · 6코어, `cpu: host` |\n| 메모리 | `24576 MiB` = 24 GiB |\n| 머신 · 펌웨어 | `q35` · `OVMF`(UEFI) |\n| 부팅 디스크 | `local-lvm`, 64 GiB |\n| EFI 디스크 | 같은 `local-lvm`, 4 MiB |\n| 디스크 컨트롤러 | `virtio-scsi-single` |\n| 게스트 에이전트 | `agent: 1`, 활성화 |\n\n자동 시작은 `onboot: 1`, 시작 순서와 간격은 `order=10,up=10`이다. 이 VM을 시작하고 다음 VM까지 10초를 기다리지만, SMB가 준비됐는지 확인하는 과정은 아니다. 재부팅 후 공유가 열리는 시점은 별도 확인이 필요하다. [시작 순서와 간격](https://github.com/proxmox/pve-docs/blob/master/qm.adoc#automatic-start-and-shutdown-of-virtual-machines)\n\nVirtIO NIC는 호스트의 물리 인터페이스와 연결된 `vmbr0`를 사용한다. `firewall=1`도 켜져 있지만 실제 허용 범위는 방화벽 규칙에 달려 있다.\n\n부팅 볼륨을 호스트 쪽에서 따라가면 64G LVM 볼륨, LVM-thin 풀, NVMe 파티션, 물리 NVMe 순서로 이어진다. TrueNAS의 EFI 디스크도 이 로컬 저장소에 있다. 아래의 데이터용 HDD 세 개와 운영체제를 담는 저장 공간이 서로 분리돼 있는 셈이다.\n\n```text\nTrueNAS 부팅\n호스트 NVMe → local-lvm → 64G 시스템 디스크 + EFI 디스크\n\nNAS 파일\n물리 HDD → QEMU SCSI 장치 → TrueNAS의 ZFS 풀 → 데이터셋 → SMB 공유\n```\n\n이 두 경로를 따로 보면 장애가 난 위치에 따라 확인할 곳도 달라진다. VM 자체가 부팅하지 않는다면 로컬 부팅 볼륨과 VM 설정이 먼저이고, 부팅 뒤 특정 공유만 열리지 않는다면 ZFS 풀·데이터셋·SMB 쪽으로 범위가 좁아진다. 실제 장애를 재현한 결과가 아니라 이 구성의 연결 관계다.\n\n# 운영체제 밖에 두는 데이터\n\n파일을 담는 공간은 호스트의 물리 디스크를 `by-id`로 연결한다. 아래 설정의 꺾쇠 부분만 장비 식별자를 바꾼 것이다.\n\n```text\nscsi0: local-lvm:<부팅 볼륨>,discard=on,iothread=1,size=64G,ssd=1\nscsi1: /dev/disk/by-id/<4TB 디스크 A>,backup=0,size=3907018584K\nscsi2: /dev/disk/by-id/<4TB 디스크 B>,backup=0,size=3907018584K\nscsi3: /dev/disk/by-id/<2TB 디스크>,backup=0,size=1953514584K\n```\n\n부팅 디스크 `scsi0`에만 discard 전달·별도 I/O 스레드·SSD 표시 옵션이 명시돼 있다. 데이터 디스크의 `backup=0`은 뒤의 백업 구성과 이어진다.\n\nTrueNAS는 이 물리 디스크에 QEMU의 가상 SCSI로 접근하므로 모델명이 `QEMU HARDDISK`로 보인다. `hostpci` 항목은 없는 구성으로, HBA 전체를 넘기는 PCI 패스스루와는 다르다. [디스크 연결 방식](https://github.com/proxmox/pve-docs/blob/master/qm.adoc#hard-disk)\n\n그 위에서 파일을 관리하는 풀은 다음 두 개다.\n\n| 풀 | 연결한 디스크 | 상태 |\n| --- | --- | --- |\n| `tank` | 4TB × 2, 미러 vdev 1개 | `ONLINE` |\n| `nc_pool` | 2TB × 1, 단일 디스크 vdev | `ONLINE` |\n\n`tank`는 용량을 합치는 대신 같은 데이터를 양쪽에 둬 한 장의 고장에 대비한다. 삭제도 함께 반영되므로 파일을 되찾을 백업은 따로 필요하다. `nc_pool`에는 중복성이 없다. 4TB·2TB가 약 3.6TiB·1.8TiB로 보이는 것은 단위 차이다. 실제 남은 공간은 풀의 사용량에 따라 달라진다. [풀 구성](https://www.truenas.com/docs/scale/25.10/scaletutorials/storage/createpoolwizard/)\n\n물리 디스크 연결과 별개로 가상화의 제약도 남는다. [TrueNAS 공식 안내](https://www.truenas.com/docs/scale/25.10/gettingstarted/scalehardwareguide/#virtualized-truenas)는 중요 데이터를 다루는 일반 운영에 가상화를 권장하지 않으며 가상 디스크 기반 풀에도 주의를 요구한다.\n\nTrueNAS 안에서는 부팅용 `boot-pool`도 `ONLINE`이었다. 따라서 운영체제의 풀, 미러로 만든 파일 저장 풀, 단일 디스크 풀을 따로 볼 수 있다. `ONLINE`은 당시 풀 상태이며, 파일을 지우고 되살리는 복구 시험 결과는 아니다.\n\n# 같은 풀에서 나누는 공유와 권한\n\n일반 파일과 Proxmox 백업은 모두 `tank`에 둔다. 대신 데이터셋과 SMB 공유를 나눠 같은 풀 안에서도 경로와 권한을 따로 관리한다.\n\n| SMB 공유 | 연결한 경로 | 데이터셋 ACL 모드 |\n| --- | --- | --- |\n| `share` | `/mnt/tank/share` | `RESTRICTED` |\n| `pve-backup` | `/mnt/tank/pve-backup` | `PASSTHROUGH` |\n\n두 데이터셋은 `NFSv4` ACL을 사용한다. 압축은 `LZ4`, 레코드 크기는 `128K`, 동기 쓰기 정책은 `STANDARD`이며 접근 시각 갱신과 읽기 전용은 모두 `OFF`다. 두 공유는 활성화돼 있고 SMB 서비스는 실행 중이며 자동 시작도 켜져 있다.\n\nShare ACL은 둘 다 `Everyone / ALLOWED / FULL`이다. 이 값만으로 누구나 쓸 수 있다는 뜻은 아니다. 파일 접근에는 아래의 데이터셋 ACL도 적용된다. [두 ACL의 역할](https://www.truenas.com/docs/scale/25.10/scaletutorials/shares/smb/managesmbshares/)\n\n`tank/share`에는 소유자·소유 그룹·추가 그룹 하나의 `FULL_CONTROL`과 읽기·탐색 중심의 사용자·그룹 항목이 함께 있고, 모두 상속 플래그가 설정돼 있다. 반면 `tank/pve-backup`은 소유자에게 읽기·쓰기·추가·하위 항목 삭제를 허용하고, 소유 그룹과 `everyone@`는 읽기·탐색 중심이다. 이쪽의 모든 항목은 `NOINHERIT`다.\n\n이 ACL은 데이터셋 루트 기준이다. 계정별 읽기·쓰기는 소속 그룹과 하위 파일의 ACL까지 따로 확인해야 한다.\n\n공유를 나눌 때 생기는 차이는 이름만이 아니다. 일반 파일 경로에는 상속되는 권한이 있고, 백업 경로의 루트 ACL 항목에는 상속하지 않는 설정이 들어 있다. 그래서 한 공유에 접근한 계정이 다른 공유에도 같은 방식으로 쓸 수 있다고 가정할 수 없다. 내 구성에서는 `공유 이름 → 데이터셋 경로 → 파일시스템 ACL`을 이어 봐야 실제 접근 대상을 설명할 수 있다.\n\n# 백업은 다시 같은 NAS로 돌아온다\n\nProxmox는 앞의 `pve-backup` 공유를 CIFS 저장소 `nas-backup`으로 연결한다. 부팅 디스크는 로컬에 두지만 VM 백업은 다시 TrueNAS의 `tank`로 들어오는 셈이다.\n\n| 예약 작업 항목 | 설정 |\n| --- | --- |\n| 실행 여부 · 대상 | 활성화, `all=1`(전체 게스트 대상) |\n| 일정 | 매주 일요일 03:00, `Asia/Seoul` |\n| 대상 저장소 | `nas-backup` → SMB `pve-backup` |\n| 백업 모드 | `snapshot` |\n| 작업의 보관 설정 | `keep-last=4`(최근 4개 보관) |\n| 저장소의 기본 보관 설정 | `keep-all=1` |\n\n예약 작업에는 최근 4개를 남기는 조건이 별도로 있다. `snapshot` 역시 Proxmox의 백업 모드이며 TrueNAS의 정기 ZFS 스냅샷과는 별개다. [백업 모드와 보관 설정](https://github.com/proxmox/pve-docs/blob/master/vzdump.adoc)\n\n현재 남아 있는 TrueNAS VM 백업은 세 개다. 다만 앞의 `backup=0` 때문에 **데이터 디스크 세 개는 VM 백업에서 빠진다.** 부팅 환경을 되살릴 백업과 NAS 파일을 복구할 백업을 나눠 봐야 한다. [디스크별 백업 포함 옵션](https://github.com/proxmox/qemu-server/blob/master/src/PVE/QemuServer/Drive.pm)\n\nVM에서 백업 파일까지의 경로를 펼치면 아래처럼 연결된다.\n\n```text\nProxmox의 예약 백업 작업\n  → CIFS 저장소 nas-backup\n  → TrueNAS의 SMB 공유 pve-backup\n  → /mnt/tank/pve-backup 데이터셋\n  → 4TB 디스크 두 개로 만든 tank 미러\n```\n\n백업 대상이 전체 게스트라고 해도 모든 디스크의 내용이 들어가는 것은 아니다. 이 NAS VM에서는 디스크별 `backup=0`이 적용되므로, 남아 있는 VM 백업 세 개를 NAS 파일의 복사본 세 개로 셀 수 없다. 또 예약 작업의 최근 4개 보관 설정은 현재 파일 개수와 다른 값이다. 설정은 앞으로 유지할 개수의 조건이고, 세 개는 조회 당시 남아 있던 아카이브 수다.\n\n백업 파일도 같은 NAS에 있으니 TrueNAS가 멈추면 접근이 어려워진다. 데이터셋을 나눴어도 호스트 밖의 독립된 복사본은 아니다. 앱 스냅샷은 일부 있지만 TrueNAS에 등록된 정기 스냅샷·복제 작업은 없다. 외부 파일 백업의 유무와 실제 복구 가능 여부는 아직 확인할 부분이다.\n\n[홈서버 글 목록으로 돌아가기](#post/homelab-things-i-built)\n",
-      "featured": true,
+      "featured": false,
       "draft": false,
       "template": false
     }
