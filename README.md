@@ -8,10 +8,13 @@ AI 서비스와 CTF 플랫폼을 개발한 과정, Proxmox·TrueNAS 홈서버를
 
 콘텐츠 원본은 `data/content.json`입니다.
 
+소개와 새 프로젝트 글은 [검토용 소개](writing/about.md), [처음 읽기](writing/development-server-journal.md), [말씨 개발 기록](writing/malssi-ai-conversation-recovery.md), [CTF 플랫폼 기록](writing/ctf-platform-auth-submission-operations.md)에서 읽을 수 있습니다. `writing/`의 Markdown은 같은 원본으로 생성한 읽기용 사본입니다.
+
 - `site`: 소개, GitHub, 최근 작업, 프로젝트, 날짜별 이력. `updatedAt`은 실제로 소개를 검토한 날짜입니다.
 - `site.translations.en`: 영어 소개와 활동·프로젝트·이력.
 - `posts`: 글의 제목·발행일·설명·태그·본문. `draft: true`인 글은 생성·검색·피드에서 제외합니다.
 - `post.updatedAt`: 기존 글의 내용을 실질적으로 수정한 날짜. 원래 발행일 `date`와 구분합니다.
+- `post.exportMarkdown`: `true`이면 GitHub에서 바로 읽을 수 있는 `writing/` 사본도 생성합니다. 수정은 원본의 `body`에 반영합니다.
 
 본문에서는 `# 제목`이 글 안의 주요 소제목(`h2`)이 됩니다. 페이지 제목은 `title`에서 생성합니다. 글 사이 링크는 `[링크 이름](#post/slug)`로 작성하면 실제 게시글 URL로 변환됩니다. 공개 코드 근거는 가능한 한 커밋에 고정한 링크를 사용합니다.
 

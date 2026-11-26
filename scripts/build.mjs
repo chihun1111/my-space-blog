@@ -87,6 +87,15 @@ ${enhanced ? renderProjects(site, 'ko', { limit: 3 }) : ''}
 }
 
 const output = new Map();
+// Readable review copies are generated from the same content as the website.
+const reviewPosts = publicPosts.filter(post => post.exportMarkdown);
+const reviewLink = slug => reviewPosts.some(post => post.slug === slug) ? `./${slug}.md` : canonical(`posts/${slug}/`);
+for (const post of reviewPosts) {
+  const body = post.body.replace(/\]\(#post\/([a-z0-9-]+)\)/g, (_, slug) => `](${reviewLink(slug)})`);
+  output.set(`writing/${post.slug}.md`, `# ${post.title}\n\n${post.description}\n\n작성일: ${post.date}\n\n${body.replace(/^# /gm, '## ')}`);
+}
+const profileReview = `# ${site.aboutTitle}\n\n${site.role}\n\n[GitHub](${site.github}) · [블로그 소스](${site.profileRepository})\n\n소개 업데이트: ${site.updatedAt}\n\n${site.aboutText.replace(/^# /gm, '## ')}\n\n## 최근 작업\n\n${site.activity.map(item => `### ${item.title}\n\n${item.status} — ${item.detail}\n\n[관련 글](${reviewLink(item.postSlug)})`).join('\n\n')}\n\n## 만들어온 것\n\n${site.projects.map(item => `### ${item.name}\n\n${item.period} · ${item.role}\n\n${item.description}\n\n기술: ${item.tags.join(', ')}\n\n${item.url ? `[저장소](${item.url}) · ` : ''}[관련 글](${reviewLink(item.postSlug)})`).join('\n\n')}\n\n## 기록의 흐름\n\n${site.timeline.map(item => `### ${item.date} · ${item.title}\n\n${item.detail}`).join('\n\n')}\n`;
+output.set('writing/about.md', profileReview);
 output.set('index.html', documentHTML({ headHTML: head({ title: `${site.name} — 개발과 서버 기록`, description: site.heroDescription }), body: homeScaffold(true), extra: `<template id="blog-home-template">${homeScaffold(false)}</template>` }));
 const aboutBody = `<section class="about-page"><div><h1>${e(site.aboutTitle)}</h1><p class="about-role">${e(site.role)}</p>${renderProfileLinks(site, 'ko', { base: '../' })}<div class="prose">${markdown(site.aboutText)}</div></div></section>${renderActivity(site, 'ko', { base: '../' })}${renderProjects(site, 'ko', { base: '../' })}${renderTimeline(site, 'ko')}`;
 output.set('about/index.html', documentHTML({ headHTML: head({ title: `${site.aboutTitle} — ${site.name}`, description: site.role + '. ' + site.heroDescription, path: 'about/', base: '../', about: true }), body: aboutBody, base: '../', about: true }));
@@ -105,11 +114,11 @@ output.set('rss.xml', `<?xml version="1.0" encoding="UTF-8"?>\n<rss version="2.0
 const sitemapEntries = [{ path: '', date: site.updatedAt }, { path: 'about/', date: site.updatedAt }, ...publicPosts.map(post => ({ path: `posts/${post.slug}/`, date: post.updatedAt || post.date }))];
 output.set('sitemap.xml', `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">${sitemapEntries.map(({path,date}) => `<url><loc>${e(canonical(path))}</loc><lastmod>${date}</lastmod></url>`).join('')}</urlset>\n`);
 output.set('robots.txt', `User-agent: *\nAllow: /\nSitemap: ${canonical('sitemap.xml')}\n`);
-const generatedPages = ['index.html', 'about/index.html', ...publicPosts.map(post => `posts/${post.slug}/index.html`)];
+const generatedPages = ['index.html', 'about/index.html', ...publicPosts.map(post => `posts/${post.slug}/index.html`), 'writing/about.md', ...reviewPosts.map(post => `writing/${post.slug}.md`)];
 const manifestPath = 'data/generated-pages.json';
 let previous = [];
 try { previous = JSON.parse(await readFile(resolve(root, manifestPath), 'utf8')); } catch (error) { if (error.code !== 'ENOENT') throw error; }
-if (!Array.isArray(previous) || previous.some(path => !/^(?:index\.html|about\/index\.html|posts\/[a-z0-9]+(?:-[a-z0-9]+)*\/index\.html)$/.test(path))) throw new Error('Invalid generated-page manifest');
+if (!Array.isArray(previous) || previous.some(path => !/^(?:index\.html|about\/index\.html|posts\/[a-z0-9]+(?:-[a-z0-9]+)*\/index\.html|writing\/[a-z0-9]+(?:-[a-z0-9]+)*\.md)$/.test(path))) throw new Error('Invalid generated-page manifest');
 output.set(manifestPath, JSON.stringify(generatedPages, null, 2) + '\n');
 const stale = previous.filter(path => !generatedPages.includes(path));
 let differences = 0;

@@ -21,5 +21,9 @@
   "posts/proxmox-vm-startup-order/index.html",
   "posts/tailscale-ssh-homelab/index.html",
   "posts/ubuntu-vm-template/index.html",
-  "posts/proxmox-truenas-setup/index.html"
+  "posts/proxmox-truenas-setup/index.html",
+  "writing/about.md",
+  "writing/development-server-journal.md",
+  "writing/malssi-ai-conversation-recovery.md",
+  "writing/ctf-platform-auth-submission-operations.md"
 ]
