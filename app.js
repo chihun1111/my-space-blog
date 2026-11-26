@@ -3,6 +3,7 @@ import { installImageViewer, installCodeCopy } from './interactions.js';
 import { escapeHTML as e, icon, safeURL, markdown, readTime, dateText, loadContent } from './lib.js';
 import { getLanguage, setLanguage, localizedSite, publishedPosts, startHerePost, visibleTopics, postInLanguage, messages } from './i18n.js';
 import { renderProfileLinks, renderActivity, renderProjects, renderTimeline } from './profile.js';
+import { localizedCategory, categoryForPost, renderCategoryCards, renderCategoryIndex, renderCategoryPage, renderPostCategory } from './categories.js';
 
 const main = document.querySelector('#main');
 document.querySelector('.skip-link').addEventListener('click', event => { event.preventDefault(); main.focus(); });
@@ -95,12 +96,14 @@ function changeLanguage(next, focusControl = true) {
 }
 function renderShell() {
   const site = siteCopy();
+  const activeCategory = location.hash.startsWith('#category/') ? content.categories?.find(category => category.slug === location.hash.slice('#category/'.length)) : null;
+  const description = activeCategory ? localizedCategory(activeCategory, language).description : location.hash === '#categories' ? t.categoryHelp : site.heroDescription;
   document.documentElement.lang = language;
   document.querySelector('meta[name="theme-color"]').content = theme() === 'dark' ? '#101116' : '#f8f9fc';
   document.querySelector('.skip-link').textContent = t.skip;
-  document.querySelector('meta[name="description"]').content = site.heroDescription || `${site.name} — ${t.blog}`;
+  document.querySelector('meta[name="description"]').content = description || `${site.name} — ${t.blog}`;
   const github = safeURL(site.github);
-  const nav = `<a href="#blog" data-nav="blog">${t.blog}</a><a href="#about" data-nav="about">${t.about}</a>${github ? `<a class="nav-github" href="${e(github)}" target="_blank" rel="noopener noreferrer">GitHub ${icon('diagonal')}</a>` : ''}`;
+  const nav = `<a href="#blog" data-nav="blog">${t.blog}</a><a href="#categories" data-nav="categories">${t.categories}</a><a href="#about" data-nav="about">${t.about}</a>${github ? `<a class="nav-github" href="${e(github)}" target="_blank" rel="noopener noreferrer">GitHub ${icon('diagonal')}</a>` : ''}`;
   const switcher = `<div class="language-switch" data-active="${language}" role="group" aria-label="${t.language}"><button data-language="ko" lang="ko" aria-label="한국어" aria-pressed="${language === 'ko'}">KO</button><button data-language="en" lang="en" aria-label="English" aria-pressed="${language === 'en'}">EN</button></div>`;
   document.querySelector('#header').innerHTML = `<div class="brand-group"><a class="brand" href="#blog" aria-label="${e(site.name)} ${t.home}">${e(site.name)}</a></div><nav aria-label="${t.explore}">${nav}</nav><div class="header-actions">${switcher}<button class="icon-button theme-toggle" aria-label="${theme() === 'dark' ? t.light : t.dark}">${icon(theme() === 'dark' ? 'sun' : 'moon')}</button><button class="icon-button menu-toggle" aria-label="${t.menuOpen}" aria-expanded="false" aria-controls="mobile-nav">${icon('menu')}</button>${localEditor ? `<a class="icon-button editor-avatar" href="${editorURL()}" aria-label="${editorEnabled ? t.write : t.login}">${editorEnabled ? `<span>${e(site.initials)}</span>` : icon('pen')}</a>` : ''}</div><div class="mobile-nav" id="mobile-nav" hidden>${nav}<button class="button mobile-theme">${theme() === 'dark' ? t.light : t.dark}</button></div>`;
   document.querySelectorAll('[data-language]').forEach(button => { button.setAttribute('aria-pressed', String(button.dataset.language === language)); button.onclick = event => changeLanguage(button.dataset.language, event.detail === 0); });
@@ -117,11 +120,11 @@ function renderShell() {
     document.querySelector('.menu-toggle').setAttribute('aria-label', t.menuOpen);
   }));
   const links = [github ? `<a href="${e(github)}" target="_blank" rel="noopener noreferrer">GitHub</a>` : '', site.email ? `<a href="mailto:${e(site.email)}" aria-label="${t.email}">${icon('mail')}</a>` : ''].join('');
-  document.querySelector('#footer').innerHTML = `<div class="footer-bottom"><span>© ${e(site.name)} ${new Date().getFullYear()}</span><nav class="footer-nav" aria-label="${t.explore}">${links}<a href="./rss.xml" type="application/rss+xml">RSS</a><a href="./about/" hreflang="ko">${language === 'en' ? 'About (Korean)' : t.about}</a>${editorEnabled ? `<a href="${editorURL('#settings')}">${t.editSite}</a>` : ''}<a href="#blog" data-back-top>${t.top}</a></nav></div>`;
-  document.querySelector('[data-back-top]').addEventListener('click', () => window.scrollTo({ top: 0 }));
+  document.querySelector('#footer').innerHTML = `<div class="footer-bottom"><span>© ${e(site.name)} ${new Date().getFullYear()}</span><nav class="footer-nav" aria-label="${t.explore}">${links}<a href="#categories">${t.categories}</a><a href="./rss.xml" type="application/rss+xml">RSS</a><a href="./about/" hreflang="ko">${language === 'en' ? 'About (Korean)' : t.about}</a>${editorEnabled ? `<a href="${editorURL('#settings')}">${t.editSite}</a>` : ''}<a href="#blog" data-back-top>${t.top}</a></nav></div>`;
+  document.querySelector('[data-back-top]').addEventListener('click', event => { event.preventDefault(); window.scrollTo({ top: 0 }); });
 }
 function updateNav() {
-  const current = location.hash === '#about' ? 'about' : 'blog';
+  const current = location.hash === '#about' ? 'about' : location.hash === '#categories' || location.hash.startsWith('#category/') ? 'categories' : 'blog';
   document.querySelectorAll('[data-nav]').forEach(link => {
     if (link.dataset.nav === current) link.setAttribute('aria-current', 'page'); else link.removeAttribute('aria-current');
   });
@@ -144,7 +147,7 @@ function blogPage() {
   title.classList.toggle('empty-title', !site.heroTitle);
   main.querySelector('.hero-description').textContent = site.heroDescription;
   main.querySelector('.hero-description').insertAdjacentHTML('afterend', renderProfileLinks(site, language));
-  main.querySelector('.hero').insertAdjacentHTML('afterend', renderActivity(site, language, { limit: 3 }));
+  main.querySelector('.hero').insertAdjacentHTML('afterend', renderCategoryCards(content.categories, content.posts, language) + renderActivity(site, language, { limit: 3 }));
   const startPost = startHerePost(allPosts);
   const startLink = main.querySelector('[data-start-post]');
   startLink.hidden = !startPost;
@@ -190,12 +193,16 @@ function blogPage() {
 function renderResults() {
   const allPosts = publishedPosts(content.posts, language);
   const needle = query.trim().toLocaleLowerCase(language);
-  const posts = allPosts.filter(p => (!topic || p.tags.includes(topic)) && (!needle || `${p.title} ${p.description} ${p.tags.join(' ')} ${p.body}`.toLocaleLowerCase(language).includes(needle)));
+  const posts = allPosts.filter(p => {
+    const category = localizedCategory(categoryForPost(content.categories, p), language);
+    const group = category?.groups.find(group => group.slug === p.group);
+    return (!topic || p.tags.includes(topic)) && (!needle || `${p.title} ${p.description} ${p.tags.join(' ')} ${category?.title || ''} ${group?.title || ''} ${p.body}`.toLocaleLowerCase(language).includes(needle));
+  });
   document.querySelector('#post-count').textContent = posts.length;
   const count = document.querySelector('#search-total'); if (count) { count.textContent = posts.length; count.parentElement.hidden = !posts.length; count.parentElement.setAttribute('aria-label', t.count(posts.length)); }
   let html = '';
   if (posts.length) {
-    html = `<div class="post-list">${posts.slice(0, visibleCount).map(post => `<article class="post-card"><div class="post-copy"><h3><a href="${postLink(post)}">${e(post.title)}</a></h3>${post.description ? `<p class="post-excerpt">${e(post.description)}</p>` : ''}<div class="post-meta"><time datetime="${e(post.date)}">${dateText(post.date, language)}</time><span>${t.minutes(readTime(post.body))}</span>${post.featured ? `<span class="post-feature-label">${icon('pin')} ${t.featured}</span>` : ''}</div></div>${post.image ? `<a href="${postLink(post)}" class="post-image" aria-label="${e(t.readLabel(post.title))}">${imageMarkup(post.image, 'cover', post.title)}</a>` : ''}</article>`).join('')}</div>${posts.length > visibleCount ? `<div class="end-note"><button class="button" id="load-more">${t.more} ${icon('plus')}</button></div>` : ''}`;
+    html = `<div class="post-list">${posts.slice(0, visibleCount).map(post => `<article class="post-card"><div class="post-copy"><h3><a href="${postLink(post)}">${e(post.title)}</a></h3>${post.description ? `<p class="post-excerpt">${e(post.description)}</p>` : ''}<div class="post-meta">${renderPostCategory(content.categories, post, language)}<time datetime="${e(post.date)}">${dateText(post.date, language)}</time><span>${t.minutes(readTime(post.body))}</span>${post.featured ? `<span class="post-feature-label">${icon('pin')} ${t.featured}</span>` : ''}</div></div>${post.image ? `<a href="${postLink(post)}" class="post-image" aria-label="${e(t.readLabel(post.title))}">${imageMarkup(post.image, 'cover', post.title)}</a>` : ''}</article>`).join('')}</div>${posts.length > visibleCount ? `<div class="end-note"><button class="button" id="load-more">${t.more} ${icon('plus')}</button></div>` : ''}`;
   } else if (!allPosts.length) {
     const alternate = otherLanguage(language);
     const hasOtherPosts = publishedPosts(content.posts, alternate).length > 0;
@@ -212,6 +219,28 @@ function aboutPage() {
   const hasImage = Boolean(site.aboutImage) || editorEnabled;
   main.innerHTML = `<section class="about-page ${hasImage ? 'has-image' : ''}"><div><h1>${e(site.aboutTitle || t.about)}</h1>${site.role ? `<p class="about-role">${e(site.role)}</p>` : ''}${renderProfileLinks(site, language)}<div class="prose">${markdown(site.aboutText)}</div>${editorEnabled ? `<a class="text-link about-edit" href="${editorURL('#settings')}">${t.editAbout}</a>` : ''}</div><div class="about-art" ${hasImage ? '' : 'hidden'}>${imageMarkup(site.aboutImage, 'about', t.aboutAlt)}</div></section>${renderActivity(site, language)}${renderProjects(site, language)}${renderTimeline(site, language)}`;
 }
+function categoryPage(slug) {
+  const category = content.categories?.find(item => item.slug === slug);
+  if (!category) {
+    document.title = `${t.missingCategory} — ${content.site.name}`;
+    main.innerHTML = `<section class="empty-state"><h1>${t.missingCategory}</h1><p>${t.categoryHelp}</p><a class="button" href="#categories">${t.categories}</a></section>`;
+    return;
+  }
+  const copy = localizedCategory(category, language);
+  document.title = `${copy.title} — ${content.site.name}`;
+  document.querySelector('meta[name="description"]').content = copy.description;
+  main.innerHTML = renderCategoryPage(category, content.posts, language, { base: './' });
+}
+main.addEventListener('click', event => {
+  const link = event.target.closest('.category-group-nav a[href^="#group-"]');
+  if (!link || !location.hash.startsWith('#category/') || event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+  const target = document.getElementById(link.getAttribute('href').slice(1));
+  if (!target) return;
+  event.preventDefault();
+  target.tabIndex = -1;
+  target.scrollIntoView({ block: 'start', behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'instant' : 'smooth' });
+  target.focus({ preventScroll: true });
+});
 function openLegacyArticle(slug) {
   const source = content.posts.find(post => post.slug === slug && !post.draft);
   const requested = new URLSearchParams(location.search).get('lang');
@@ -244,9 +273,16 @@ function bindImageFallbacks() {
 function route() {
   const hash = location.hash;
   const site = siteCopy();
+  document.querySelector('meta[name="description"]').content = site.heroDescription || `${site.name} — ${t.blog}`;
   document.title = hash === '#about' ? `${site.aboutTitle || t.about} — ${site.name}` : `${site.name} — ${t.journal}`;
   if (hash.startsWith('#post/')) { let slug; try { slug = decodeURIComponent(hash.slice(6)); } catch { slug = ''; } openLegacyArticle(slug); }
   else if (hash === '#about') aboutPage();
+  else if (hash === '#categories') {
+    document.title = `${t.categories} — ${site.name}`;
+    document.querySelector('meta[name="description"]').content = t.categoryHelp;
+    main.innerHTML = renderCategoryIndex(content.categories, content.posts, language, { base: './' });
+  }
+  else if (hash.startsWith('#category/')) categoryPage(hash.slice('#category/'.length));
   else blogPage();
   updateNav(); bindImageFallbacks(); window.scrollTo({ top: 0, behavior: 'instant' });
 }

@@ -234,7 +234,9 @@
       "draft": false,
       "template": false,
       "exportMarkdown": true,
-      "updatedAt": "2026-11-26"
+      "updatedAt": "2026-11-26",
+      "category": "notes",
+      "group": "start-here"
     },
     {
       "slug": "malssi-ai-conversation-recovery",
@@ -254,7 +256,9 @@
       "draft": false,
       "template": false,
       "exportMarkdown": true,
-      "updatedAt": "2026-11-26"
+      "updatedAt": "2026-11-26",
+      "category": "competitions",
+      "group": "malssi"
     },
     {
       "slug": "ctf-platform-auth-submission-operations",
@@ -274,7 +278,9 @@
       "draft": false,
       "template": false,
       "exportMarkdown": true,
-      "updatedAt": "2026-11-26"
+      "updatedAt": "2026-11-26",
+      "category": "school",
+      "group": "ctf"
     },
     {
       "slug": "n8n-automation-vm",
@@ -296,7 +302,9 @@
       "featured": false,
       "draft": false,
       "template": false,
-      "updatedAt": "2026-11-26"
+      "updatedAt": "2026-11-26",
+      "category": "hobby",
+      "group": "automation-access"
     },
     {
       "slug": "wol-power-portal",
@@ -319,7 +327,9 @@
       "featured": false,
       "draft": false,
       "template": false,
-      "updatedAt": "2026-11-26"
+      "updatedAt": "2026-11-26",
+      "category": "hobby",
+      "group": "automation-access"
     },
     {
       "slug": "atm10-mincrafty-server",
@@ -342,7 +352,9 @@
       "featured": false,
       "draft": false,
       "template": false,
-      "updatedAt": "2026-11-26"
+      "updatedAt": "2026-11-26",
+      "category": "hobby",
+      "group": "development-games"
     },
     {
       "slug": "hermes-development-vm",
@@ -364,7 +376,9 @@
       "featured": false,
       "draft": false,
       "template": false,
-      "updatedAt": "2026-11-26"
+      "updatedAt": "2026-11-26",
+      "category": "hobby",
+      "group": "development-games"
     },
     {
       "slug": "home-assistant-vm",
@@ -385,7 +399,9 @@
       "featured": false,
       "draft": false,
       "template": false,
-      "updatedAt": "2026-11-26"
+      "updatedAt": "2026-11-26",
+      "category": "hobby",
+      "group": "automation-access"
     },
     {
       "slug": "homelab-things-i-built",
@@ -407,7 +423,9 @@
       "featured": false,
       "draft": false,
       "template": false,
-      "updatedAt": "2026-11-26"
+      "updatedAt": "2026-11-26",
+      "category": "hobby",
+      "group": "overview"
     },
     {
       "slug": "immich-truenas-photos",
@@ -429,7 +447,9 @@
       "featured": false,
       "draft": false,
       "template": false,
-      "updatedAt": "2026-11-26"
+      "updatedAt": "2026-11-26",
+      "category": "hobby",
+      "group": "nas-apps"
     },
     {
       "slug": "mincrafty-game-panel",
@@ -450,7 +470,9 @@
       "featured": false,
       "draft": false,
       "template": false,
-      "updatedAt": "2026-11-26"
+      "updatedAt": "2026-11-26",
+      "category": "hobby",
+      "group": "development-games"
     },
     {
       "slug": "netdata-truenas-monitoring",
@@ -472,7 +494,9 @@
       "featured": false,
       "draft": false,
       "template": false,
-      "updatedAt": "2026-11-26"
+      "updatedAt": "2026-11-26",
+      "category": "hobby",
+      "group": "nas-apps"
     },
     {
       "slug": "nextcloud-truenas-files",
@@ -494,7 +518,9 @@
       "featured": false,
       "draft": false,
       "template": false,
-      "updatedAt": "2026-11-26"
+      "updatedAt": "2026-11-26",
+      "category": "hobby",
+      "group": "nas-apps"
     },
     {
       "slug": "postgresql-data-services-vm",
@@ -516,7 +542,9 @@
       "featured": false,
       "draft": false,
       "template": false,
-      "updatedAt": "2026-11-26"
+      "updatedAt": "2026-11-26",
+      "category": "hobby",
+      "group": "development-games"
     },
     {
       "slug": "proxmox-vm-cpu-memory",
@@ -539,7 +567,9 @@
       "featured": false,
       "draft": false,
       "template": false,
-      "updatedAt": "2026-11-26"
+      "updatedAt": "2026-11-26",
+      "category": "hobby",
+      "group": "server-setup"
     },
     {
       "slug": "proxmox-vm-disks",
@@ -562,7 +592,9 @@
       "featured": false,
       "draft": false,
       "template": false,
-      "updatedAt": "2026-11-26"
+      "updatedAt": "2026-11-26",
+      "category": "hobby",
+      "group": "server-setup"
     },
     {
       "slug": "proxmox-vm-network-cloud-init",
@@ -585,7 +617,9 @@
       "featured": false,
       "draft": false,
       "template": false,
-      "updatedAt": "2026-11-26"
+      "updatedAt": "2026-11-26",
+      "category": "hobby",
+      "group": "server-setup"
     },
     {
       "slug": "proxmox-vm-startup-order",
@@ -608,7 +642,9 @@
       "featured": false,
       "draft": false,
       "template": false,
-      "updatedAt": "2026-11-26"
+      "updatedAt": "2026-11-26",
+      "category": "hobby",
+      "group": "server-setup"
     },
     {
       "slug": "tailscale-ssh-homelab",
@@ -630,7 +666,9 @@
       "featured": false,
       "draft": false,
       "template": false,
-      "updatedAt": "2026-11-26"
+      "updatedAt": "2026-11-26",
+      "category": "hobby",
+      "group": "automation-access"
     },
     {
       "slug": "ubuntu-vm-template",
@@ -652,7 +690,9 @@
       "featured": false,
       "draft": false,
       "template": false,
-      "updatedAt": "2026-11-26"
+      "updatedAt": "2026-11-26",
+      "category": "hobby",
+      "group": "server-setup"
     },
     {
       "slug": "proxmox-truenas-setup",
@@ -675,7 +715,151 @@
       "featured": false,
       "draft": false,
       "template": false,
-      "updatedAt": "2026-11-26"
+      "updatedAt": "2026-11-26",
+      "category": "hobby",
+      "group": "server-setup"
+    }
+  ],
+  "categories": [
+    {
+      "slug": "competitions",
+      "title": "대회 참가",
+      "description": "팀으로 참가한 대회 프로젝트를 모았어요. 제가 맡은 부분과 만들면서 바꾼 내용을 적었어요.",
+      "groups": [
+        {
+          "slug": "malssi",
+          "title": "말씨 만들기",
+          "description": "말씨의 질문 흐름과 모델 연결, 입력 보존과 결과 저장을 손본 기록이에요."
+        }
+      ],
+      "translations": {
+        "en": {
+          "title": "Competition entries",
+          "description": "Projects I entered with a team, with notes on my contributions and changes along the way.",
+          "groups": [
+            {
+              "slug": "malssi",
+              "title": "Building Malssi",
+              "description": "Question flows, model integration, preserving input, and saving results in Malssi."
+            }
+          ]
+        }
+      }
+    },
+    {
+      "slug": "hobby",
+      "title": "취미·홈서버",
+      "description": "집에서 구성한 서버와 앱, 자동화와 게임 환경을 모았어요. 설정한 과정과 직접 확인한 상태를 함께 남겼어요.",
+      "groups": [
+        {
+          "slug": "overview",
+          "title": "홈서버 한눈에 보기",
+          "description": "어떤 서버를 구성했는지, 관련 글은 어디서부터 읽으면 좋을지 한곳에 정리했어요."
+        },
+        {
+          "slug": "server-setup",
+          "title": "서버 기본 설정",
+          "description": "Proxmox VM의 자원과 디스크, 네트워크, 부팅 순서부터 TrueNAS 구성까지 정리했어요."
+        },
+        {
+          "slug": "nas-apps",
+          "title": "NAS에 올린 앱",
+          "description": "TrueNAS에 Nextcloud·Immich·Netdata를 올리고 저장 공간과 접속 상태를 살펴본 기록이에요."
+        },
+        {
+          "slug": "automation-access",
+          "title": "자동화·원격 접속",
+          "description": "n8n과 Home Assistant를 구성하고, WOL과 Tailscale·SSH를 연결하며 확인한 내용을 적었어요."
+        },
+        {
+          "slug": "development-games",
+          "title": "개발 환경·게임 서버",
+          "description": "개발·데이터 처리 VM부터 Discord 봇과 MinCrafty·ATM10까지, 직접 구성하고 손본 내용을 담았어요."
+        }
+      ],
+      "translations": {
+        "en": {
+          "title": "Hobbies & home lab",
+          "description": "Servers, apps, automation, and games at home, with notes on setup and what I checked.",
+          "groups": [
+            {
+              "slug": "overview",
+              "title": "Home lab overview",
+              "description": "A look at the setup and a starting point for the related posts."
+            },
+            {
+              "slug": "server-setup",
+              "title": "Server setup",
+              "description": "Proxmox resources, disks, networking, startup order, and TrueNAS configuration."
+            },
+            {
+              "slug": "nas-apps",
+              "title": "Apps on the NAS",
+              "description": "Nextcloud, Immich, and Netdata on TrueNAS, including storage and access checks."
+            },
+            {
+              "slug": "automation-access",
+              "title": "Automation & remote access",
+              "description": "n8n, Home Assistant, WOL, Tailscale, and SSH setup notes."
+            },
+            {
+              "slug": "development-games",
+              "title": "Development & game servers",
+              "description": "Development and data VMs, a Discord bot, MinCrafty, and ATM10."
+            }
+          ]
+        }
+      }
+    },
+    {
+      "slug": "school",
+      "title": "학교 프로젝트",
+      "description": "학교 CTF 대회를 위해 만든 사이트와 개발 기록이에요.",
+      "groups": [
+        {
+          "slug": "ctf",
+          "title": "CTF 사이트 만들기",
+          "description": "문제 화면과 관리자 기능, 개인별 플래그와 제출 기록을 연결한 과정을 적었어요."
+        }
+      ],
+      "translations": {
+        "en": {
+          "title": "School projects",
+          "description": "Development notes from building a site for a school CTF competition.",
+          "groups": [
+            {
+              "slug": "ctf",
+              "title": "Building a CTF site",
+              "description": "Connecting challenge pages, admin tools, individual flags, and submission records."
+            }
+          ]
+        }
+      }
+    },
+    {
+      "slug": "notes",
+      "title": "블로그 안내",
+      "description": "이 블로그에서 다루는 프로젝트와 관련 글을 한곳에 정리했어요.",
+      "groups": [
+        {
+          "slug": "start-here",
+          "title": "처음 오셨다면",
+          "description": "말씨와 CTF 사이트, 홈서버 기록을 소개하고 글을 읽는 순서를 안내해요."
+        }
+      ],
+      "translations": {
+        "en": {
+          "title": "Blog guide",
+          "description": "An introduction to my projects, with links to related posts.",
+          "groups": [
+            {
+              "slug": "start-here",
+              "title": "Start here",
+              "description": "Meet Malssi, the CTF site, and the home lab, and find a place to start reading."
+            }
+          ]
+        }
+      }
     }
   ]
 }

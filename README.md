@@ -26,10 +26,30 @@
 - `posts`: 글의 제목·발행일·설명·태그·본문. `draft: true`인 글은 생성·검색·피드에서 제외해요.
 - `post.updatedAt`: 기존 글의 내용을 실질적으로 수정한 날짜예요. 원래 발행일 `date`와 구분해요.
 - `post.exportMarkdown`: `true`이면 GitHub에서 바로 읽을 수 있는 `writing/` 사본도 생성해요. 수정은 원본의 `body`에 반영해요.
+- `categories`: 분류 이름·소개와 세부 주제 목록이에요. `translations.en`에는 영어 이름과 소개를 넣어요.
+- `post.category`: 글이 속한 활동 분류의 slug예요. 공개 글은 분류를 하나씩 지정해요.
+- `post.group`: 해당 분류 안의 세부 주제 slug예요. 생략하면 분류 페이지의 별도 목록에 표시해요.
 
 본문에서는 `# 제목`이 글 안의 주요 소제목(`h2`)이 돼요. 페이지 제목은 `title`에서 생성해요. 글 사이 링크는 `[링크 이름](#post/slug)`로 작성하면 실제 게시글 URL로 바뀌어요. 공개 코드 근거는 가능한 한 커밋에 고정한 링크를 사용해요.
 
-`index.html`, `about/index.html`, `posts/*/index.html`, `rss.xml`, `sitemap.xml`, `robots.txt`, `data/generated-pages.json`은 생성 결과예요. 원본을 바꾸고 다시 생성해서 수정해요. 생성기는 기존 생성 목록에 있는 폐기된 게시글 페이지만 제거하고, 그 외 파일은 그대로 둬요.
+`index.html`, `about/index.html`, `categories/index.html`, `categories/*/index.html`, `posts/*/index.html`, `rss.xml`, `sitemap.xml`, `robots.txt`, `data/generated-pages.json`은 생성 결과예요. 원본을 바꾸고 다시 생성해서 수정해요. 생성기는 기존 생성 목록에 있는 폐기된 페이지와 읽기용 사본을 제거하고, 그 외 파일은 그대로 둬요.
+
+## 분류별로 읽기
+
+[분류별 글](https://chihun1111.github.io/my-space-blog/categories/)에서 원하는 활동을 골라 볼 수 있어요.
+
+| 분류 | 담는 내용 | 주소 |
+| --- | --- | --- |
+| 대회 참가 | HOP Biohealth AI Challenge의 말씨처럼 직접 참가한 대회 프로젝트 | [대회 참가 글](https://chihun1111.github.io/my-space-blog/categories/competitions/) |
+| 취미·홈서버 | 개인 서버, NAS 앱, 자동화, 개발 환경과 게임 서버 | [취미·홈서버 글](https://chihun1111.github.io/my-space-blog/categories/hobby/) |
+| 학교 프로젝트 | 교내 CTF 사이트처럼 학교 활동을 위해 만든 프로젝트 | [학교 프로젝트 글](https://chihun1111.github.io/my-space-blog/categories/school/) |
+| 블로그 안내 | 블로그에서 다루는 내용과 처음 읽을 글 안내 | [블로그 안내](https://chihun1111.github.io/my-space-blog/categories/notes/) |
+
+취미·홈서버 글은 한눈에 보기, 서버 기본 설정, NAS 앱, 자동화·원격 접속, 개발 환경·게임 서버로 한 번 더 나눠요. 분류 페이지의 주제 링크를 누르면 해당 목록으로 이동해요. 글 위의 분류 링크와 글 아래의 돌아가기 링크로 목록을 다시 볼 수도 있어요.
+
+새 글에는 `category`와 필요한 `group`을 지정해요. 예를 들어 NAS 앱을 다룬 글은 `"category": "hobby"`, `"group": "nas-apps"`로 넣어요. 분류는 활동의 맥락을, 기존 `tags`는 기술 주제를 나타내요. 분류와 세부 주제를 추가할 때는 `categories`의 한국어·영어 항목을 함께 맞춰요.
+
+분류 페이지는 JavaScript 없이도 읽고 이동할 수 있어요. 영어 전환에서는 같은 분류를 영어 안내로 보여 주고, 한국어 글에는 언어를 표시해요. 사이트 주소와 기존 글 주소는 그대로 사용해요.
 
 ## 생성·확인·미리보기
 
@@ -41,7 +61,7 @@ npm run check
 npm run preview
 ```
 
-미리보기는 Python 3의 정적 서버를 사용하고 `http://localhost:4173`에서 열려요. `check`는 JavaScript 구문, 글의 날짜·slug·내부 링크, 프로필의 글 링크, 원본과 생성 파일의 일치를 확인해요.
+미리보기는 Python 3의 정적 서버를 사용하고 `http://localhost:4173`에서 열려요. `check`는 JavaScript 구문, 글의 날짜·slug·내부 링크, 분류·세부 주제 배정, 프로필의 글 링크, 원본과 생성 파일의 일치를 확인해요.
 
 정적 HTML에 본문과 소개가 들어 있어서 JavaScript가 꺼져 있어도 읽을 수 있어요. 검색·주제 필터·언어 전환·테마·코드 복사는 브라우저 JavaScript로 동작해요. GitHub Pages에서는 `data-static="true"`로 로컬 편집기 API 요청을 생략해요.
 
@@ -59,9 +79,10 @@ GitHub Pages의 저장소 경로는 `site.url`에 지정해요. 주소를 바꾸
 | --- | --- |
 | `app.js` | 홈·소개 라우팅, 검색·필터·언어 전환 |
 | `profile.js` | 최근 작업·프로젝트·이력의 공통 HTML 렌더링 |
+| `categories.js` | 분류 카드·분류별 목록·세부 주제·글의 분류 이동 링크 |
 | `article.js` | 정적 글·소개 페이지의 테마·메뉴·공유 동작 |
 | `lib.js` | 안전한 Markdown 렌더링, 목차, 공통 유틸리티 |
-| `scripts/build.mjs` | 본문·소개·목록·검색 공유 정보·피드 생성 |
+| `scripts/build.mjs` | 본문·소개·분류별 페이지·검색 공유 정보·피드 생성 |
 | `styles.css` | 모바일·다크 모드·읽기 화면 스타일 |
 
 Pretendard 글꼴의 라이선스와 출처는 `assets/fonts/`에 있어요.

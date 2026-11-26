@@ -1,6 +1,11 @@
 [
   "index.html",
   "about/index.html",
+  "categories/index.html",
+  "categories/competitions/index.html",
+  "categories/hobby/index.html",
+  "categories/school/index.html",
+  "categories/notes/index.html",
   "posts/development-server-journal/index.html",
   "posts/malssi-ai-conversation-recovery/index.html",
   "posts/ctf-platform-auth-submission-operations/index.html",

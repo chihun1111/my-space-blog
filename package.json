@@ -4,8 +4,10 @@
   "type": "module",
   "scripts": {
     "build": "node scripts/build.mjs",
-    "check": "node --check app.js && node --check article.js && node --check lib.js && node --check i18n.js && node --check profile.js && node scripts/build.mjs --check",
+    "check": "node --check app.js && node --check article.js && node --check lib.js && node --check i18n.js && node --check profile.js && node --check categories.js && node scripts/build.mjs --check",
     "preview": "python3 -m http.server 4173"
   },
-  "engines": { "node": ">=22" }
+  "engines": {
+    "node": ">=22"
+  }
 }
