@@ -8,7 +8,7 @@ AI 서비스와 CTF 플랫폼을 개발한 과정, Proxmox·TrueNAS 홈서버를
 
 콘텐츠 원본은 `data/content.json`입니다.
 
-소개와 새 프로젝트 글은 [검토용 소개](writing/about.md), [처음 읽기](writing/development-server-journal.md), [말씨 개발 기록](writing/malssi-ai-conversation-recovery.md), [CTF 플랫폼 기록](writing/ctf-platform-auth-submission-operations.md)에서 읽을 수 있습니다. `writing/`의 Markdown은 같은 원본으로 생성한 읽기용 사본입니다.
+소개와 프로젝트 글은 [소개 전체](writing/about.md), [처음 읽기](writing/development-server-journal.md), [말씨 개발 기록](writing/malssi-ai-conversation-recovery.md), [CTF 플랫폼 기록](writing/ctf-platform-auth-submission-operations.md)에서 읽을 수 있습니다. `writing/`의 Markdown은 같은 원본으로 생성한 읽기용 사본입니다.
 
 - `site`: 소개, GitHub, 최근 작업, 프로젝트, 날짜별 이력. `updatedAt`은 실제로 소개를 검토한 날짜입니다.
 - `site.translations.en`: 영어 소개와 활동·프로젝트·이력.

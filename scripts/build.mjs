@@ -79,7 +79,8 @@ function postList(items, base = './') {
 }
 function homeScaffold(enhanced = false) {
   const start = startHerePost(posts);
-  return `<section class="hero" aria-labelledby="hero-title"><div class="hero-art" hidden></div><div class="hero-copy"><h1 id="hero-title">${e(site.heroTitle)}</h1><p class="hero-description">${e(site.heroDescription)}</p>${enhanced ? `<div class="hero-actions">${renderProfileLinks(site, 'ko')}</div>` : ''}<a class="text-link hero-start" data-start-post href="./posts/${start.slug}/"><span>${messages.ko.startHere} · ${e(start.title)}</span>${icon('arrow')}</a><div class="search-area" hidden><div class="search-box">${icon('search')}<label class="sr-only" for="search">${messages.ko.search}</label><input type="search" id="search" placeholder="글 검색하기" autocomplete="off"><button id="clear-search" class="search-clear" type="button" hidden aria-label="검색 지우기">${icon('close')}</button><span class="search-count" hidden><span id="search-total">0</span></span></div><p class="search-caption" hidden><a data-home-editor href="./editor.html">첫 글 작성</a></p></div></div></section>
+  const startLink = `<a class="text-link hero-start" data-start-post${start ? ` href="./posts/${start.slug}/"` : ' hidden'}><span>${start ? `${messages.ko.startHere} · ${e(start.title)}` : ''}</span>${icon('arrow')}</a>`;
+  return `<section class="hero" aria-labelledby="hero-title"><div class="hero-art" hidden></div><div class="hero-copy"><h1 id="hero-title">${e(site.heroTitle)}</h1><p class="hero-description">${e(site.heroDescription)}</p>${enhanced ? `<div class="hero-actions">${renderProfileLinks(site, 'ko')}</div>` : ''}${startLink}<div class="search-area" hidden><div class="search-box">${icon('search')}<label class="sr-only" for="search">${messages.ko.search}</label><input type="search" id="search" placeholder="글 검색하기" autocomplete="off"><button id="clear-search" class="search-clear" type="button" hidden aria-label="검색 지우기">${icon('close')}</button><span class="search-count" hidden><span id="search-total">0</span></span></div><p class="search-caption" hidden><a data-home-editor href="./editor.html">첫 글 작성</a></p></div></div></section>
 ${enhanced ? renderActivity(site, 'ko', { limit: 3 }) : ''}
 <section class="browse" aria-labelledby="topics-title" hidden><h2 id="topics-title">주제</h2><div class="topic-list" id="topics"></div></section><section class="articles" aria-labelledby="articles-title"><div class="section-heading"><h2 id="articles-title"><span data-home-text="articles">글 목록</span> <span id="post-count">${enhanced ? posts.length : 0}</span></h2></div><div id="results" aria-live="polite" aria-atomic="false">${enhanced ? postList(posts) : '<div class="empty-feature"><h3>기록을 불러오는 중입니다.</h3></div>'}</div></section>
 ${enhanced ? renderProjects(site, 'ko', { limit: 3 }) : ''}
@@ -87,7 +88,7 @@ ${enhanced ? renderProjects(site, 'ko', { limit: 3 }) : ''}
 }
 
 const output = new Map();
-// Readable review copies are generated from the same content as the website.
+// Readable Markdown copies are generated from the same content as the website.
 const reviewPosts = publicPosts.filter(post => post.exportMarkdown);
 const reviewLink = slug => reviewPosts.some(post => post.slug === slug) ? `./${slug}.md` : canonical(`posts/${slug}/`);
 for (const post of reviewPosts) {
