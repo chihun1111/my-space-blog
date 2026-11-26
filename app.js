@@ -1,13 +1,13 @@
 import { uploadRasterImage } from './images.js';
 import { installImageViewer, installCodeCopy } from './interactions.js';
 import { escapeHTML as e, icon, safeURL, markdown, readTime, dateText, loadContent } from './lib.js';
-import { getLanguage, setLanguage, localizedSite, publishedPosts, startHerePost, visibleTopics, postInLanguage, messages } from './i18n.js';
+import { getLanguage, setLanguage, localizedSite, publishedPosts, startHerePost, postInLanguage, messages } from './i18n.js';
 import { renderProfileLinks, renderActivity, renderProjects, renderTimeline } from './profile.js';
-import { localizedCategory, categoryForPost, renderCategoryCards, renderCategoryIndex, renderCategoryPage, renderPostCategory } from './categories.js';
+import { localizedCategory, categoryForPost, renderCategoryCards, renderCategoryIndex, renderCategoryPage } from './categories.js';
 
 const main = document.querySelector('#main');
 document.querySelector('.skip-link').addEventListener('click', event => { event.preventDefault(); main.focus(); });
-let content, editorEnabled = false, localEditor = false, imageSaving = false, language = getLanguage(), topic = '', query = '', visibleCount = 12, toastTimer;
+let content, editorEnabled = false, localEditor = false, imageSaving = false, language = getLanguage(), query = '', visibleCount = 12, toastTimer;
 let t = messages[language];
 const theme = () => document.documentElement.dataset.theme;
 const siteCopy = () => localizedSite(content.site, language);
@@ -17,10 +17,9 @@ const otherLanguage = language => language === 'ko' ? 'en' : 'ko';
 const hasAbout = site => Boolean(site.role || site.aboutTitle || site.aboutText || site.aboutImage);
 function saveBrowseState() {
   const url = new URL(location.href);
-  for (const [key, value] of [['q', query], ['topic', topic]]) {
-    if (value) url.searchParams.set(key, value);
-    else url.searchParams.delete(key);
-  }
+  if (query) url.searchParams.set('q', query);
+  else url.searchParams.delete('q');
+  url.searchParams.delete('topic');
   if (url.href !== location.href) history.replaceState(history.state, '', url);
 }
 const imageField = kind => kind === 'hero' ? 'heroImage' : 'aboutImage';
@@ -89,7 +88,7 @@ function toggleTheme() {
 }
 function changeLanguage(next, focusControl = true) {
   if (next === language) return;
-  language = setLanguage(next); t = messages[language]; topic = ''; query = ''; visibleCount = 12;
+  language = setLanguage(next); t = messages[language]; query = ''; visibleCount = 12;
   saveBrowseState();
   renderShell(); route();
   if (focusControl) document.querySelector(`[data-language="${language}"]`)?.focus({ preventScroll: true });
@@ -103,7 +102,7 @@ function renderShell() {
   document.querySelector('.skip-link').textContent = t.skip;
   document.querySelector('meta[name="description"]').content = description || `${site.name} — ${t.blog}`;
   const github = safeURL(site.github);
-  const nav = `<a href="#blog" data-nav="blog">${t.blog}</a><a href="#categories" data-nav="categories">${t.categories}</a><a href="#about" data-nav="about">${t.about}</a>${github ? `<a class="nav-github" href="${e(github)}" target="_blank" rel="noopener noreferrer">GitHub ${icon('diagonal')}</a>` : ''}`;
+  const nav = `<a href="#blog" data-nav="blog">${t.blog}</a><a href="#about" data-nav="about">${t.about}</a>${github ? `<a class="nav-github" href="${e(github)}" target="_blank" rel="noopener noreferrer">GitHub ${icon('diagonal')}</a>` : ''}`;
   const switcher = `<div class="language-switch" data-active="${language}" role="group" aria-label="${t.language}"><button data-language="ko" lang="ko" aria-label="한국어" aria-pressed="${language === 'ko'}">KO</button><button data-language="en" lang="en" aria-label="English" aria-pressed="${language === 'en'}">EN</button></div>`;
   document.querySelector('#header').innerHTML = `<div class="brand-group"><a class="brand" href="#blog" aria-label="${e(site.name)} ${t.home}">${e(site.name)}</a></div><nav aria-label="${t.explore}">${nav}</nav><div class="header-actions">${switcher}<button class="icon-button theme-toggle" aria-label="${theme() === 'dark' ? t.light : t.dark}">${icon(theme() === 'dark' ? 'sun' : 'moon')}</button><button class="icon-button menu-toggle" aria-label="${t.menuOpen}" aria-expanded="false" aria-controls="mobile-nav">${icon('menu')}</button>${localEditor ? `<a class="icon-button editor-avatar" href="${editorURL()}" aria-label="${editorEnabled ? t.write : t.login}">${editorEnabled ? `<span>${e(site.initials)}</span>` : icon('pen')}</a>` : ''}</div><div class="mobile-nav" id="mobile-nav" hidden>${nav}<button class="button mobile-theme">${theme() === 'dark' ? t.light : t.dark}</button></div>`;
   document.querySelectorAll('[data-language]').forEach(button => { button.setAttribute('aria-pressed', String(button.dataset.language === language)); button.onclick = event => changeLanguage(button.dataset.language, event.detail === 0); });
@@ -120,11 +119,11 @@ function renderShell() {
     document.querySelector('.menu-toggle').setAttribute('aria-label', t.menuOpen);
   }));
   const links = [github ? `<a href="${e(github)}" target="_blank" rel="noopener noreferrer">GitHub</a>` : '', site.email ? `<a href="mailto:${e(site.email)}" aria-label="${t.email}">${icon('mail')}</a>` : ''].join('');
-  document.querySelector('#footer').innerHTML = `<div class="footer-bottom"><span>© ${e(site.name)} ${new Date().getFullYear()}</span><nav class="footer-nav" aria-label="${t.explore}">${links}<a href="#categories">${t.categories}</a><a href="./rss.xml" type="application/rss+xml">RSS</a><a href="./about/" hreflang="ko">${language === 'en' ? 'About (Korean)' : t.about}</a>${editorEnabled ? `<a href="${editorURL('#settings')}">${t.editSite}</a>` : ''}<a href="#blog" data-back-top>${t.top}</a></nav></div>`;
+  document.querySelector('#footer').innerHTML = `<div class="footer-bottom"><span>© ${e(site.name)} ${new Date().getFullYear()}</span><nav class="footer-nav" aria-label="${t.explore}">${links}<a href="./rss.xml" type="application/rss+xml">RSS</a><a href="./about/" hreflang="ko">${language === 'en' ? 'About (Korean)' : t.about}</a>${editorEnabled ? `<a href="${editorURL('#settings')}">${t.editSite}</a>` : ''}<a href="#blog" data-back-top>${t.top}</a></nav></div>`;
   document.querySelector('[data-back-top]').addEventListener('click', event => { event.preventDefault(); window.scrollTo({ top: 0 }); });
 }
 function updateNav() {
-  const current = location.hash === '#about' ? 'about' : location.hash === '#categories' || location.hash.startsWith('#category/') ? 'categories' : 'blog';
+  const current = location.hash === '#about' ? 'about' : 'blog';
   document.querySelectorAll('[data-nav]').forEach(link => {
     if (link.dataset.nav === current) link.setAttribute('aria-current', 'page'); else link.removeAttribute('aria-current');
   });
@@ -132,11 +131,9 @@ function updateNav() {
 function blogPage() {
   const site = siteCopy();
   const allPosts = publishedPosts(content.posts, language);
-  const topics = visibleTopics(site.topics, allPosts);
   const params = new URLSearchParams(location.search);
-  const savedTopic = params.get('topic');
   query = params.get('q') || '';
-  topic = topics.includes(savedTopic) ? savedTopic : '';
+  if (params.has('topic')) saveBrowseState();
   main.replaceChildren(document.querySelector('#blog-home-template').content.cloneNode(true));
   const heroImage = main.querySelector('.hero-art');
   heroImage.hidden = !site.heroImage && !editorEnabled;
@@ -159,7 +156,6 @@ function blogPage() {
   main.querySelector('label[for="search"]').textContent = t.search;
   const search = main.querySelector('#search');
   search.placeholder = t.searchPlaceholder; search.value = query;
-  main.querySelector('#topics-title').textContent = t.topics;
   main.querySelectorAll('[data-home-text]').forEach(element => { element.textContent = t[element.dataset.homeText]; });
   const caption = main.querySelector('.search-caption');
   caption.hidden = !editorEnabled || allPosts.length > 0;
@@ -174,14 +170,6 @@ function blogPage() {
   main.querySelector('.about-strip-copy h2').textContent = site.aboutTitle || t.about;
   const role = main.querySelector('[data-about-role]');
   role.hidden = !site.role; role.textContent = site.role;
-  main.querySelector('.browse').hidden = !topics.length;
-  document.querySelector('#topics').innerHTML = topics.length ? ['', ...topics].map(value => `<button class="topic ${topic === value ? 'selected' : ''}" type="button" aria-pressed="${topic === value}" data-topic="${e(value)}">${e(value || t.all)}</button>`).join('') : '';
-  document.querySelectorAll('[data-topic]').forEach(button => button.addEventListener('click', () => {
-    topic = button.dataset.topic; visibleCount = 12;
-    saveBrowseState();
-    document.querySelectorAll('[data-topic]').forEach(b => { b.classList.toggle('selected', b === button); b.setAttribute('aria-pressed', String(b === button)); });
-    renderResults();
-  }));
   const clear = document.querySelector('#clear-search'); clear.setAttribute('aria-label', t.clearSearch);
   const updateSearch = value => { query = value; visibleCount = 12; clear.hidden = !query; saveBrowseState(); renderResults(); };
   clear.hidden = !query;
@@ -196,13 +184,13 @@ function renderResults() {
   const posts = allPosts.filter(p => {
     const category = localizedCategory(categoryForPost(content.categories, p), language);
     const group = category?.groups.find(group => group.slug === p.group);
-    return (!topic || p.tags.includes(topic)) && (!needle || `${p.title} ${p.description} ${p.tags.join(' ')} ${category?.title || ''} ${group?.title || ''} ${p.body}`.toLocaleLowerCase(language).includes(needle));
+    return !needle || `${p.title} ${p.description} ${p.tags.join(' ')} ${category?.title || ''} ${group?.title || ''} ${p.body}`.toLocaleLowerCase(language).includes(needle);
   });
   document.querySelector('#post-count').textContent = posts.length;
   const count = document.querySelector('#search-total'); if (count) { count.textContent = posts.length; count.parentElement.hidden = !posts.length; count.parentElement.setAttribute('aria-label', t.count(posts.length)); }
   let html = '';
   if (posts.length) {
-    html = `<div class="post-list">${posts.slice(0, visibleCount).map(post => `<article class="post-card"><div class="post-copy"><h3><a href="${postLink(post)}">${e(post.title)}</a></h3>${post.description ? `<p class="post-excerpt">${e(post.description)}</p>` : ''}<div class="post-meta">${renderPostCategory(content.categories, post, language)}<time datetime="${e(post.date)}">${dateText(post.date, language)}</time><span>${t.minutes(readTime(post.body))}</span>${post.featured ? `<span class="post-feature-label">${icon('pin')} ${t.featured}</span>` : ''}</div></div>${post.image ? `<a href="${postLink(post)}" class="post-image" aria-label="${e(t.readLabel(post.title))}">${imageMarkup(post.image, 'cover', post.title)}</a>` : ''}</article>`).join('')}</div>${posts.length > visibleCount ? `<div class="end-note"><button class="button" id="load-more">${t.more} ${icon('plus')}</button></div>` : ''}`;
+    html = `<div class="post-list">${posts.slice(0, visibleCount).map(post => `<article class="post-card"><div class="post-copy"><h3><a href="${postLink(post)}">${e(post.title)}</a></h3>${post.description ? `<p class="post-excerpt">${e(post.description)}</p>` : ''}<div class="post-meta"><time datetime="${e(post.date)}">${dateText(post.date, language)}</time><span>${t.minutes(readTime(post.body))}</span>${post.featured ? `<span class="post-feature-label">${icon('pin')} ${t.featured}</span>` : ''}</div></div>${post.image ? `<a href="${postLink(post)}" class="post-image" aria-label="${e(t.readLabel(post.title))}">${imageMarkup(post.image, 'cover', post.title)}</a>` : ''}</article>`).join('')}</div>${posts.length > visibleCount ? `<div class="end-note"><button class="button" id="load-more">${t.more} ${icon('plus')}</button></div>` : ''}`;
   } else if (!allPosts.length) {
     const alternate = otherLanguage(language);
     const hasOtherPosts = publishedPosts(content.posts, alternate).length > 0;
@@ -210,7 +198,7 @@ function renderResults() {
   }
   else html = `<div class="empty-state"><h3>${t.noResults}</h3><p>${t.searchAgain}</p><button class="button" id="reset-search">${t.allArticles}</button></div>`;
   document.querySelector('#results').innerHTML = html;
-  document.querySelector('#reset-search')?.addEventListener('click', () => { topic = ''; query = ''; visibleCount = 12; saveBrowseState(); blogPage(); document.querySelector('#search').focus(); });
+  document.querySelector('#reset-search')?.addEventListener('click', () => { query = ''; visibleCount = 12; saveBrowseState(); blogPage(); document.querySelector('#search').focus(); });
   document.querySelector('#load-more')?.addEventListener('click', () => { visibleCount += 12; renderResults(); });
   bindImageFallbacks();
 }
@@ -231,16 +219,6 @@ function categoryPage(slug) {
   document.querySelector('meta[name="description"]').content = copy.description;
   main.innerHTML = renderCategoryPage(category, content.posts, language, { base: './' });
 }
-main.addEventListener('click', event => {
-  const link = event.target.closest('.category-group-nav a[href^="#group-"]');
-  if (!link || !location.hash.startsWith('#category/') || event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
-  const target = document.getElementById(link.getAttribute('href').slice(1));
-  if (!target) return;
-  event.preventDefault();
-  target.tabIndex = -1;
-  target.scrollIntoView({ block: 'start', behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'instant' : 'smooth' });
-  target.focus({ preventScroll: true });
-});
 function openLegacyArticle(slug) {
   const source = content.posts.find(post => post.slug === slug && !post.draft);
   const requested = new URLSearchParams(location.search).get('lang');

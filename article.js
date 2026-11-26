@@ -75,7 +75,7 @@ if (document.referrer) {
     if (previous.origin !== home.origin || previous.pathname !== home.pathname) continue;
     const previousLanguage = previous.searchParams.get('lang');
     if (previousLanguage && previousLanguage !== root.lang) continue;
-    for (const name of ['q', 'topic']) {
+    for (const name of ['q']) {
       if (previous.searchParams.has(name)) home.searchParams.set(name, previous.searchParams.get(name));
     }
     link.href = home.href;

@@ -34,9 +34,9 @@
 
 `index.html`, `about/index.html`, `categories/index.html`, `categories/*/index.html`, `posts/*/index.html`, `rss.xml`, `sitemap.xml`, `robots.txt`, `data/generated-pages.json`은 생성 결과예요. 원본을 바꾸고 다시 생성해서 수정해요. 생성기는 기존 생성 목록에 있는 폐기된 페이지와 읽기용 사본을 제거하고, 그 외 파일은 그대로 둬요.
 
-## 분류별로 읽기
+## 모음 페이지로 읽기
 
-[분류별 글](https://chihun1111.github.io/my-space-blog/categories/)에서 원하는 활동을 골라 볼 수 있어요.
+[글 모음](https://chihun1111.github.io/my-space-blog/categories/)에서 원하는 활동의 페이지로 이동할 수 있어요. 홈에도 같은 페이지를 여는 간단한 텍스트 링크를 두었어요.
 
 | 분류 | 담는 내용 | 주소 |
 | --- | --- | --- |
@@ -45,7 +45,7 @@
 | 학교 프로젝트 | 교내 CTF 사이트처럼 학교 활동을 위해 만든 프로젝트 | [학교 프로젝트 글](https://chihun1111.github.io/my-space-blog/categories/school/) |
 | 블로그 안내 | 블로그에서 다루는 내용과 처음 읽을 글 안내 | [블로그 안내](https://chihun1111.github.io/my-space-blog/categories/notes/) |
 
-취미·홈서버 글은 한눈에 보기, 서버 기본 설정, NAS 앱, 자동화·원격 접속, 개발 환경·게임 서버로 한 번 더 나눠요. 분류 페이지의 주제 링크를 누르면 해당 목록으로 이동해요. 글 위의 분류 링크와 글 아래의 돌아가기 링크로 목록을 다시 볼 수도 있어요.
+취미·홈서버 글은 한눈에 보기, 서버 기본 설정, NAS 앱, 자동화·원격 접속, 개발 환경·게임 서버 소제목 아래에 모았어요. 각 제목 링크를 눌러 글을 열고, 글 위의 모음 링크나 아래의 돌아가기 링크로 목록을 다시 볼 수 있어요. 별도 분류 탭이나 카드, 주제 선택 버튼은 두지 않아요.
 
 새 글에는 `category`와 필요한 `group`을 지정해요. 예를 들어 NAS 앱을 다룬 글은 `"category": "hobby"`, `"group": "nas-apps"`로 넣어요. 분류는 활동의 맥락을, 기존 `tags`는 기술 주제를 나타내요. 분류와 세부 주제를 추가할 때는 `categories`의 한국어·영어 항목을 함께 맞춰요.
 
@@ -63,7 +63,7 @@ npm run preview
 
 미리보기는 Python 3의 정적 서버를 사용하고 `http://localhost:4173`에서 열려요. `check`는 JavaScript 구문, 글의 날짜·slug·내부 링크, 분류·세부 주제 배정, 프로필의 글 링크, 원본과 생성 파일의 일치를 확인해요.
 
-정적 HTML에 본문과 소개가 들어 있어서 JavaScript가 꺼져 있어도 읽을 수 있어요. 검색·주제 필터·언어 전환·테마·코드 복사는 브라우저 JavaScript로 동작해요. GitHub Pages에서는 `data-static="true"`로 로컬 편집기 API 요청을 생략해요.
+정적 HTML에 본문과 소개가 들어 있어서 JavaScript가 꺼져 있어도 읽을 수 있어요. 검색·언어 전환·테마·코드 복사는 브라우저 JavaScript로 동작해요. GitHub Pages에서는 `data-static="true"`로 로컬 편집기 API 요청을 생략해요.
 
 GitHub Pages의 저장소 경로는 `site.url`에 지정해요. 주소를 바꾸면 이 값을 수정하고 다시 생성해야 canonical, Open Graph, RSS, sitemap 주소가 함께 바뀌어요.
 
@@ -77,9 +77,9 @@ GitHub Pages의 저장소 경로는 `site.url`에 지정해요. 주소를 바꾸
 
 | 파일 | 역할 |
 | --- | --- |
-| `app.js` | 홈·소개 라우팅, 검색·필터·언어 전환 |
+| `app.js` | 홈·소개·모음 라우팅, 검색·언어 전환 |
 | `profile.js` | 최근 작업·프로젝트·이력의 공통 HTML 렌더링 |
-| `categories.js` | 분류 카드·분류별 목록·세부 주제·글의 분류 이동 링크 |
+| `categories.js` | 모음 페이지·글 목록·페이지를 오가는 텍스트 링크 |
 | `article.js` | 정적 글·소개 페이지의 테마·메뉴·공유 동작 |
 | `lib.js` | 안전한 Markdown 렌더링, 목차, 공통 유틸리티 |
 | `scripts/build.mjs` | 본문·소개·분류별 페이지·검색 공유 정보·피드 생성 |
