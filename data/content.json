@@ -1,0 +1,421 @@
+{
+  "site": {
+    "name": "Chihun",
+    "initials": "C.",
+    "role": "",
+    "heroTitle": "",
+    "heroDescription": "Proxmox와 TrueNAS로 꾸린 홈서버의 구성과 운영 기록.",
+    "aboutTitle": "",
+    "aboutText": "Proxmox 위에 NAS, 자동화, 게임 서버, 개발 환경을 나눠 뒀다. 각 서비스의 설정과 쓰면서 고친 문제를 이곳에 기록한다.",
+    "github": "",
+    "email": "",
+    "topics": [
+      "서버 설정",
+      "NAS·서비스",
+      "자동화·접속",
+      "게임 서버"
+    ],
+    "heroImage": "",
+    "aboutImage": "",
+    "translations": {
+      "en": {
+        "role": "",
+        "heroTitle": "",
+        "heroDescription": "Notes on building and running a home server with Proxmox and TrueNAS.",
+        "aboutTitle": "",
+        "aboutText": "I use a Proxmox home server for storage, automation, game servers, and development. I keep notes here on how it is set up and the problems I fixed along the way.",
+        "topics": [
+          "Server setup",
+          "NAS & services",
+          "Automation & access",
+          "Game servers"
+        ]
+      }
+    }
+  },
+  "posts": [
+    {
+      "slug": "n8n-automation-vm",
+      "title": "n8n을 올려 쓴 전용 VM, 자원과 네트워크 설정",
+      "date": "2026-10-23",
+      "description": "",
+      "tags": [
+        "자동화·접속",
+        "홈랩",
+        "n8n",
+        "Proxmox",
+        "Cloud-Init"
+      ],
+      "cover": "blue",
+      "image": "",
+      "language": "ko",
+      "translationKey": "n8n-automation-vm",
+      "body": "n8n은 Proxmox에 별도 VM으로 올려 사용했다. NAS 안의 앱으로 넣은 구성이 아니라, CPU와 메모리·시스템 디스크·네트워크 주소를 가진 독립된 환경이다. 홈서버에서 Home Assistant, 데이터 처리, WOL을 각각 나눈 것처럼 n8n도 전용 VM으로 두었다.\n\n지금 남아 있는 구성에서 구체적으로 설명할 수 있는 부분은 이 VM의 자원 배정과 저장소, 고정 주소, 시작 순서다. 워크플로의 노드나 실행 내역까지 복원한 상태는 아니므로, 이 글은 n8n을 올려 쓴 서버 환경에 초점을 맞췄다.\n\n# 2코어·6GiB와 60G 시스템 디스크\n\n2026년 10월 22일 기준으로 n8n VM에는 CPU 2코어와 메모리 6144MiB를 배정해 뒀다. 메모리를 GiB로 바꾸면 6GiB다. 머신 유형은 `q35`, 펌웨어는 `OVMF`이며 CPU 유형은 `host`다.\n\n| 항목 | 내 설정 |\n| --- | --- |\n| CPU | 1소켓 · 2코어, `host` |\n| 메모리 | 6144MiB, 즉 6GiB |\n| 머신·펌웨어 | `q35` · `OVMF` |\n| 시스템 디스크 | `local-lvm`의 `scsi0`, 60G |\n| SCSI 컨트롤러 | `virtio-scsi-single` |\n| 네트워크 | VirtIO NIC → `vmbr0` |\n\n6GiB는 VM에 배정한 메모리다. n8n 프로세스가 실제로 그만큼 사용했다는 측정값도, Node.js 힙 제한을 6GiB로 설정했다는 뜻도 아니다. 같은 호스트의 데이터 처리 VM도 2코어·6GiB를 쓰지만 시스템 디스크는 40G다. 두 VM의 자원이 비슷해도 디스크와 주소는 따로 관리한다.\n\n시스템 디스크는 Proxmox의 로컬 저장소에 있다. NAS 공유를 부팅 디스크로 사용하지 않는다. 디스크 설정에는 `discard=on`, `iothread=1`, `ssd=1`이 함께 들어 있다.\n\n```text\nscsihw: virtio-scsi-single\nscsi0: local-lvm:<시스템 볼륨>,discard=on,iothread=1,size=60G,ssd=1\n```\n\n볼륨 식별자를 생략한 실제 설정 형태다. `discard`는 게스트의 discard 요청 전달, `iothread`는 디스크 I/O 처리 스레드, `ssd`는 게스트에 알리는 장치 특성과 관련된 옵션이다. 이 옵션만으로 워크플로 처리 속도나 저장소 성능을 평가할 수는 없다. 디스크 연결 방식은 [VM 디스크 설정 글](#post/proxmox-vm-disks)에 따로 적었다.\n\n# Cloud-Init 매체와 고정 주소를 붙였다\n\nn8n VM에는 시스템 디스크 외에 Cloud-Init용 `ide0` 매체가 연결돼 있다. 이 매체도 `local-lvm`에 있으며 CD-ROM 형식이다. Cloud-Init 설정을 게스트에 전달하는 매체와 OS가 들어 있는 60G 시스템 디스크는 역할이 다르다. [Proxmox Cloud-Init 문서](https://github.com/proxmox/pve-docs/blob/master/qm-cloud-init.adoc)\n\n네트워크 장치는 VirtIO 방식으로 `vmbr0`에 연결했다. `ipconfig0`에는 DHCP 대신 IPv4 주소와 CIDR, 게이트웨이가 명시돼 있다. 주소를 일반화하면 설정의 관계는 아래와 같다.\n\n```text\nnet0: virtio=<VM MAC>,bridge=vmbr0,firewall=1\nide0: local-lvm:<Cloud-Init 볼륨>,media=cdrom\nipconfig0: ip=<고정 IPv4>/<프리픽스>,gw=<게이트웨이>\n```\n\n개발용 VM의 `ipconfig0`는 DHCP다. n8n과 데이터 처리 VM은 각각 고정 주소를 지정해 둔 쪽이다. 브리지에 연결하는 설정과 게스트가 사용할 주소를 지정하는 설정이 한 줄에 들어 있지 않으므로 두 항목을 함께 봐야 한다.\n\n`firewall=1`도 네트워크 장치에 들어 있다. 다만 이 값 하나가 어떤 앱 포트를 허용했는지 설명해 주지는 않는다. VM의 주소, Proxmox 방화벽 규칙, 게스트에서 앱이 수신하는 포트는 서로 다른 설정이다. 고정 주소를 지정해 뒀다는 사실만으로 n8n 웹 화면까지 접속된다고 볼 수는 없다.\n\n# NAS와 데이터 VM 뒤에 시작하도록 두었다\n\n호스트 부팅 시 자동 시작하는 옵션을 켜고, 시작 순서를 70으로 지정해 뒀다.\n\n```text\nonboot: 1\nstartup: order=70,up=30\nboot: order=scsi0;ide2;net0\n```\n\n`startup`은 VM 사이의 시작 순서이고 `boot`는 n8n VM 내부의 부팅 장치 순서다. 이 VM은 시스템 디스크인 `scsi0`를 먼저 시도한다. 두 곳에 모두 `order`라는 말이 있지만 정하는 대상은 다르다.\n\n내 홈서버의 자동 시작 순서는 NAS가 10, WOL이 40, Home Assistant와 데이터 처리 VM이 50, n8n이 70이다. n8n의 `up=30`은 이 VM을 시작한 뒤 다음 대상으로 넘어가기 전의 대기 시간이다. n8n 앱이나 데이터베이스가 준비됐다는 응답을 기다리는 검사는 아니다. [VM 자동 시작과 종료 순서](https://github.com/proxmox/pve-docs/blob/master/qm.adoc#automatic-start-and-shutdown-of-virtual-machines)\n\n데이터 처리 VM을 먼저 켜도록 뒀더라도 n8n이 그 VM의 PostgreSQL을 사용한다고 단정할 수는 없다. n8n 자체의 저장 방식과 다른 서비스로 연결하는 자격증명·노드는 앱 안에서 별도로 확인해야 하는 설정이다.\n\n# VM을 다시 켠 것과 n8n에 접속한 것은 달랐다\n\n10월 22일에는 n8n VM이 중지 상태였다. 23일에 VM을 다시 시작했고 Proxmox의 전원 상태는 `running`으로 바뀌었다. 자동 시작 옵션이 남아 있는 것과 지금 전원이 켜져 있는 것은 별개의 상태였다.\n\n전원을 켠 뒤에도 내부 확인에는 막히는 부분이 있었다. QEMU 게스트 에이전트는 응답하지 않았고, Tailscale 경로의 SSH 접속은 시간 초과로 끝났다. Proxmox를 거쳐 내부 주소로 접속하면 SSH 서버에는 도달했지만 기존 키 인증이 거절됐다.\n\nn8n의 기본 웹 포트로 시도한 상태 요청에서도 정상 응답을 받지 못했다. 실제 앱이 그 포트에서 수신하는지까지 확인된 상태는 아니므로, 이 결과를 n8n 프로세스가 종료됐다는 증거로 사용하지는 않는다. 현재 확인된 상태는 VM 실행까지다.\n\n이 환경에서 n8n을 올려 쓴 경험은 있지만, 남아 있는 워크플로 이름과 노드 연결, 성공·실패 실행 기록은 아직 열어 보지 못했다. 그래서 특정 서비스 연동이나 자동화 결과를 이 글에 덧붙이지 않았다. VM 설정은 유지돼 있으며 앱 내부 기록은 접속이 복구된 뒤 이어서 남길 부분이다.\n\n[VM 네트워크와 Cloud-Init 설정](#post/proxmox-vm-network-cloud-init) · [홈서버 글 목록으로 돌아가기](#post/homelab-things-i-built)\n",
+      "featured": false,
+      "draft": false,
+      "template": false
+    },
+    {
+      "slug": "wol-power-portal",
+      "title": "WOL 포털로 PC를 켜고 Windows·Ubuntu 부팅까지 연결하기",
+      "date": "2026-10-23",
+      "description": "매직 패킷 재전송부터 Windows 준비 확인과 일회성 Ubuntu 부팅까지 전원 포털을 고친 과정이다.",
+      "tags": [
+        "자동화·접속",
+        "홈랩",
+        "WOL",
+        "Tailscale",
+        "Windows",
+        "Ubuntu"
+      ],
+      "cover": "green",
+      "image": "",
+      "language": "ko",
+      "translationKey": "wol-power-portal",
+      "body": "홈서버에 WOL용 VM을 두고 웹에서 PC를 켜는 포털을 만들었다. 대상 목록과 상태 확인, 종료와 재부팅을 붙였고, Windows와 Ubuntu를 함께 쓰는 PC를 위해 다음 한 번만 Ubuntu로 부팅하는 작업도 연결했다.\n\n패킷을 보낼 주소, PC가 준비됐다고 판단할 시점, 현재 실행 중인 OS를 각각 처리해야 했다. 2026년 8월에는 브로드캐스트와 패킷 반복 전송을 손봤다. 10월에는 OS별 전원 명령을 나누고 Windows 스크립트의 종료 코드 전달을 수정했다.\n\n실제 PC에서 전원 동작과 OS 전환이 성공했는지는 실행 로그가 남아 있지 않아 확인하지 못했다.\n\n# WOL을 담당하는 VM과 웹 포털\n\nWOL용 VM은 Proxmox에서 별도로 관리한다. 2026년 10월 22일에는 실행 중이었고, 설정은 다음과 같았다.\n\n| 항목 | 설정 |\n| --- | --- |\n| CPU | 1소켓 · 2코어, `host` |\n| 메모리 | 4096MiB, 즉 4GiB |\n| 시스템 디스크 | `local-lvm`의 `scsi0`, 35G |\n| 머신·펌웨어 | `q35` · `OVMF` |\n| SCSI 컨트롤러 | `virtio-scsi-single` |\n| 네트워크 | VirtIO NIC → `vmbr0` |\n| 자동 시작 | `onboot=1`, `order=40,up=30` |\n\n웹 화면은 Next.js로 만들고 정적 번들을 FastAPI에서 제공하도록 구성했다. 화면과 API가 같은 오리진에 있으므로 프런트엔드에서는 `/api/...` 상대경로로 요청한다. 대상 PC 목록, 상태, Wake·종료·재부팅 버튼, Ubuntu 부팅 작업과 최근 로그가 이 화면에 있다.\n\n대상 정보는 JSON 파일로 관리한다. 이름, 주소, MAC 주소와 전원 명령을 연결하는 구조다. MAC 주소가 없을 때는 대상이 온라인인 상태에서 ARP 정보를 이용해 찾는 처리도 넣었다. 주소를 등록한 것과 WOL을 보낼 MAC 주소까지 준비된 것은 구분한다.\n\n현재 저장소의 운영 구성은 Docker Compose를 기준으로 한다. 이전 systemd 파일과 설치 스크립트도 남아 있지만 호환용이다. 두 방식을 함께 띄우는 구성으로 안내하지 않고 실행 주체를 하나로 정리했다.\n\n# 브로드캐스트 주소를 맞추고 전송 결과에 남겼다\n\n8월 26일에는 WOL이 사용할 인터페이스와 브로드캐스트 설정을 당시 LAN에 맞게 수정했다. 매직 패킷을 만드는 코드와 패킷을 내보낼 네트워크 설정을 함께 맞추는 작업이었다.\n\n기본 구현은 Python 소켓을 사용한다. 브로드캐스트 전송을 허용한 UDP 소켓을 만들고, 대상 MAC 주소로 구성한 매직 패킷을 9번 포트로 보낸다. 별도로 `etherwake`를 사용하는 분기도 있다. Python 방식에서는 브로드캐스트 목적지, `etherwake` 방식에서는 사용할 인터페이스가 전송 경로를 설명하는 값이다.\n\n설정을 고치면서 API 응답과 로그에도 전송 방식과 목적지를 남겼다. 요청이 끝났다는 사실과 함께 서버가 어떤 설정으로 패킷을 보냈는지 되짚을 수 있게 했다. Ubuntu 부팅 작업 안에서 WOL을 보낼 때도 같은 정보를 기록하도록 연결했다.\n\n이 로그의 전송 성공은 PC 부팅 완료와 다르다. 소켓이 패킷을 보낸 다음에는 대상이 실제로 준비됐는지 따로 기다려야 한다. 이후 선택 부팅 작업을 붙일 때도 이 구분을 유지했다.\n\n# 한 번 보내던 매직 패킷에 반복 전송을 붙였다\n\n8월 27일에는 전송 횟수와 간격을 설정으로 분리했다. 한 번만 전송하던 코드를 바꾸고 기본값을 다섯 번, 0.25초로 두었다.\n\n```text\nWOL_PACKET_COUNT=5\nWOL_PACKET_INTERVAL=0.25\n```\n\n이 값은 저장소의 기본값이다. 실행 환경에서 다른 값을 지정할 수 있으므로 모든 운영 요청이 반드시 이 횟수로 나갔다는 뜻은 아니다.\n\n같은 소켓에서 지정한 횟수만큼 보내고 전송 사이에 간격을 두는 방식으로 구현했다. 전송 횟수는 최소 한 번, 간격은 0 이상으로 처리한다. 응답과 동작 로그에는 `packet_count`를 추가했다.\n\n테스트 코드에는 다섯 번 전송하고 네 번 기다리는 경우를 넣었다. 각 패킷의 목적지 포트가 UDP 9인지도 검사한다. 이 테스트가 확인하는 것은 반복 전송 로직이다. 실제 PC의 부팅 시간이나 성공률을 잰 결과와는 다르다.\n\n# Windows가 준비된 뒤에 Ubuntu 부팅을 요청했다\n\n선택 부팅은 일반 Wake보다 단계가 많다. PC가 꺼져 있다면 먼저 켜고, Windows가 준비된 다음 다음 한 번의 부팅 대상을 Ubuntu로 지정해야 한다. 재부팅 요청 뒤에는 Ubuntu가 올라왔는지도 확인한다.\n\n```text\n현재 OS 확인\n  ├─ Ubuntu 준비 완료 → 작업 완료\n  └─ Windows 미준비 → WOL 전송 → Windows 준비 대기\n\nWindows SSH 준비 확인\n  → 다음 한 번의 Ubuntu 부팅 설정\n  → 재부팅\n  → Ubuntu SSH 준비 확인\n  → 작업 완료\n```\n\n8월 26일에는 `windows_login_ready` 단계를 추가했다. Windows의 제한 SSH 명령에서 정확한 준비 응답을 받아야 다음 단계로 넘어가도록 바꿨다. ping 응답이나 열린 SSH 포트만으로 Windows 로그인이 준비됐다고 판단하지 않는다.\n\n같은 PC의 네트워크 응답만으로는 현재 OS까지 알 수 없기 때문이다. Windows는 전용 준비 명령의 응답을 보고, Ubuntu는 별도의 SSH 경로에서 `uname -s`의 `Linux` 응답을 확인한다. SSH 명령이 정상 종료되고 출력이 예상한 값과 정확히 일치해야 준비 상태로 처리한다.\n\n다음 부팅 대상을 지정하는 BootNext 설정에 실패하면 재부팅을 진행하지 않는다. 앞 단계가 실패했는데 재부팅만 해 버리는 상황을 막는 조건이다. Ubuntu가 이미 준비된 경우에는 추가 WOL이나 재부팅 없이 작업을 완료한다.\n\n# 오래 걸리는 부팅을 별도 작업으로 관리했다\n\nUbuntu 부팅 요청은 API가 작업을 만들고 202 응답을 반환하는 방식이다. 화면은 작업 ID로 상태를 조회한다. 작업 상태는 SQLite에 저장하고 진행 단계와 종료 결과를 구분한다.\n\n기다리는 시간도 구간별로 나눴다. 아래 값은 현재 저장소의 기본값이며, 실제 부팅 시간이나 운영 환경의 재정의 값을 측정한 표는 아니다.\n\n| 구간 | 기본값 |\n| --- | --- |\n| Windows 준비 대기 | 180초 |\n| Ubuntu 준비 대기 | 300초 |\n| 전체 부팅 작업 | 480초 |\n| 상태 확인 간격 | 5초 |\n| 개별 SSH 명령 제한 | 10초 |\n| 재부팅 시작 대기 | 30초 |\n\n단계별 제한과 전체 제한을 함께 사용하므로 앞 단계가 늦어졌다고 작업이 무한히 늘어나지는 않는다. 같은 대상에 활성 작업이 있으면 중복 요청을 막고, 취소는 BootNext를 설정하기 전까지만 허용한다. 다음 부팅 대상을 바꾼 뒤에는 화면의 작업 취소만으로 원래 상태로 돌아가는 것이 아니기 때문이다.\n\n재부팅 응답이 불분명하면 바로 성공으로 처리하지 않고 두 OS의 상태를 다시 살핀다. Windows가 계속 살아 있고 재부팅이 시작되지 않은 경우에는 일회성 설정을 정리하는 경로도 있다.\n\n서비스 재시작으로 중단된 작업은 자동으로 이어서 실행하지 않고 실패 상태로 정리한다. 포털이 다시 켜졌다는 이유만으로 예전 전원 명령이 뒤늦게 나가지 않도록 한 처리다.\n\n# 현재 OS에 맞게 종료·재부팅 명령을 나눴다\n\n10월 6일에는 종료와 재부팅 경로를 수정했다. Ubuntu 선택 부팅을 활성화한 대상으로 지정한 PC에서는 현재 OS에 맞춰 명령을 고르도록 했다. 이 경로는 `UBUNTU_BOOT_ENABLED=true`이고 요청 대상이 `UBUNTU_BOOT_TARGET`과 일치할 때만 사용한다. 활성화 옵션의 코드 기본값은 `false`이며, 다른 대상은 대상 목록에 등록한 기존 명령을 사용한다.\n\n수정한 코드는 두 OS의 준비 상태를 SSH로 확인하고, 확인된 OS의 명령만 실행한다. 어느 쪽도 확인할 수 없으면 503으로 끝낸다. 한 OS의 명령이 실패했다고 다른 OS 명령을 추측해서 보내지 않는다.\n\n전원 요청은 명령이 정상 종료되고 종료 또는 재부팅을 받아들였다는 정확한 응답이 돌아와야 접수 성공으로 처리한다. 이 응답 역시 실제 종료·재부팅의 완료를 뜻하지는 않는다.\n\n이 대상의 일반 재부팅과 Ubuntu 선택 부팅은 목적지도 나눴다. 일반 재부팅 버튼은 Windows를 다음 부팅 대상으로 지정한 뒤 재부팅한다. Ubuntu로 켜는 기능은 앞에서 설명한 별도 작업을 사용한다. 같은 PC의 재부팅이어도 다음 OS가 다르므로 명령과 처리 흐름을 구분했다.\n\n# PowerShell에서 끝난 명령의 결과를 호출자에게 전달했다\n\n같은 날 저장소의 Windows 스크립트 연결 예제도 한 번 더 수정했다. 기존 예제의 호출 방식에서는 전원 동작을 처리한 뒤에도 호출자 쪽의 미지원 명령 분기로 흘러갈 수 있었다.\n\n처리 스크립트를 dot-source하는 방식 대신 호출 연산자로 실행하고, 곧바로 `exit $LASTEXITCODE`로 종료 코드를 전달하도록 README의 래퍼 예제와 스크립트 주석을 바꿨다. 정상 처리 뒤에 래퍼의 나머지 분기가 실행되지 않도록 하는 연결 방식이다.\n\n원격 명령이 접수됐더라도 호출자가 뒤에서 오류를 내면 웹에서는 실패로 읽을 수 있다. 실제 처리 결과와 API가 받아 보는 결과를 맞추기 위한 수정이며, Windows 처리 스크립트의 모의 검사 파일도 함께 추가했다. 이 변경 기록은 연결 예제와 검사 코드에 대한 것이고 실기기 래퍼의 배포·검증 결과까지 남아 있는 것은 아니다.\n\n# Tailscale 뒤에서 포털과 전원 명령을 연결했다\n\n저장소의 운영 구성은 Tailscale Serve를 앞에 두고 FastAPI를 localhost의 8000번 포트에 연결한다. Docker는 WOL 브로드캐스트를 보낼 수 있도록 호스트 네트워크를 사용하되 웹 서버의 바인딩은 localhost로 제한했다.\n\nAPI는 사용자 식별 헤더가 없으면 401로 처리한다. 현재 코드의 이 검사는 사용자별로 서로 다른 전원 권한을 나누는 기능은 아니다. 식별 헤더가 있는 요청을 받는 구조이므로 실제 접근 범위는 Tailscale의 접근 정책과 장비 공유 설정도 함께 결정한다.\n\n컨테이너의 기본 파일시스템과 SSH 설정은 읽기 전용으로 연결하고, 대상 목록·로그·부팅 작업 DB처럼 변경이 필요한 데이터는 따로 유지한다. 전원 버튼을 누른 요청이 어떤 대상과 명령으로 이어졌는지 남기는 구성이다.\n\nVM의 전원은 켜져 있었지만 게스트 에이전트는 응답하지 않았다. 포털의 정상 응답 여부는 확인하지 못했다. 저장소에는 실기기 검사 스크립트가 남아 있다.\n\n[Tailscale과 SSH 접속 구성](#post/tailscale-ssh-homelab) · [홈서버 글 목록으로 돌아가기](#post/homelab-things-i-built)\n",
+      "featured": false,
+      "draft": false,
+      "template": false
+    },
+    {
+      "slug": "atm10-mincrafty-server",
+      "title": "MinCrafty 안에 ATM10 모드팩 서버를 올려 봤다",
+      "date": "2026-10-22",
+      "description": "",
+      "tags": [
+        "게임 서버",
+        "홈랩",
+        "마인크래프트",
+        "ATM10",
+        "MinCrafty",
+        "Proxmox"
+      ],
+      "cover": "peach",
+      "image": "",
+      "language": "ko",
+      "translationKey": "atm10-mincrafty-server",
+      "body": "홈서버에 MinCrafty 관리 패널을 올리고, 그 안에서 ATM10 모드팩 서버도 구성해 봤다. 패널만 띄워 둔 것이 아니라 실제 마인크래프트 모드팩을 올리는 데 이 환경을 사용했다. 게임용 VM을 만들고 그 안에 관리 도구와 게임 서버를 함께 둔 구조다.\n\n# Proxmox 안의 VM, 그 안의 관리 패널과 모드팩\n\nProxmox가 관리하는 대상은 게임용 VM이다. MinCrafty는 그 VM 안의 서버 관리 환경이고, ATM10은 안에 올려서 사용한 모드팩이다. 세 이름이 같은 대상을 가리키지는 않는다.\n\n```text\nProxmox 호스트\n  └─ 게임 관리용 VM\n       ├─ MinCrafty 웹 관리 패널\n       └─ ATM10 모드팩 서버\n```\n\nVM의 CPU·메모리와 디스크 크기는 Proxmox 쪽 설정이다. 게임 서버의 실행 명령이나 Java 메모리는 그보다 안쪽의 설정이다. VM에 자원을 배정한 다음에도 모드팩 실행 환경은 따로 맞아야 한다.\n\n2026년 10월 22일에 남아 있는 VM 설정은 4코어, 메모리 6144MiB, 시스템 디스크 80G다. 디스크는 `local-lvm`에 있고 네트워크는 `vmbr0`에 연결돼 있다. 이 값은 현재 보관 중인 VM의 구성으로, ATM10을 돌리던 모든 시점의 자원 설정을 나타내지는 않는다.\n\n# ATM10은 서버팩까지 맞춰야 하는 모드팩이다\n\n올려 본 모드팩은 All the Mods 10, 줄여서 ATM10이다. 공식 배포는 Minecraft 1.21.1과 NeoForge를 기반으로 하며 서버용 파일도 별도로 제공한다. 일반 서버 실행 파일 하나와 모드팩 서버 전체를 같은 것으로 다룰 수 없는 이유다. [ATMTeam의 공식 배포 페이지](https://www.curseforge.com/minecraft/modpacks/all-the-mods-10)\n\nATM 공식 안내에서는 플레이할 팩 버전을 고른 뒤 그 버전의 Additional Files에서 Server Files를 받도록 설명한다. 클라이언트에 설치한 ATM10과 서버에 올리는 서버팩은 같은 팩 버전을 기준으로 확인해야 한다. 마인크래프트 버전만 같다고 팩 안의 모드 구성까지 같아지는 것은 아니다. [공식 서버 설치 안내](https://allthemods.github.io/alltheguides/help/server/#installation)\n\n현재 공식 Java 안내에서 Minecraft 1.21 이상에 사용하는 버전은 Java 21이다. 여러 Java가 있는 환경에서는 기본 `java`와 서버 시작 스크립트가 호출하는 Java 경로도 구분해야 한다. 이 내용은 ATM10 실행 환경을 설명하는 기준이며, 당시 내 VM에 설치했던 정확한 Java 버전이나 경로의 기록은 남아 있지 않다. [Java 버전과 실행 경로](https://allthemods.github.io/alltheguides/help/java/#java-versions)\n\n# 관리 화면의 8443과 게임 접속은 다르다\n\nMinCrafty를 실행했을 때는 8443/TCP에서 웹 요청에 응답했고 `/panel/dashboard`로 리다이렉트했다. 이 주소는 브라우저로 관리 패널에 들어가는 통로다. 마인크래프트 클라이언트가 ATM10 서버에 접속할 때 사용하는 포트와는 역할이 다르다. Crafty 공식 문서도 HTTPS 관리 포트와 게임 서버 포트를 따로 다룬다. [Crafty의 접속과 포트 구분](https://docs.craftycontrol.com/pages/getting-started/installation/docker/#expose-crafty-on-different-ports)\n\n| 바깥에서 보이는 대상 | 맡는 역할 |\n| --- | --- |\n| Proxmox의 VM | 가상 하드웨어와 전원 관리 |\n| MinCrafty의 8443 웹 패널 | 브라우저에서 서버 관리 |\n| ATM10 게임 서버 | 모드팩을 사용하는 게임 환경 |\n\n패널이 열린다는 것만으로 모드팩 초기화나 게임 접속까지 확인되는 것은 아니다. 서버를 다시 구성할 때도 관리 화면 접속, 모드팩 실행, 게임 클라이언트 접속을 차례로 구분해 살펴야 한다. ATM10을 올린 위치는 같아도 각 단계에서 문제가 생기는 지점은 다르다.\n\n# 현재는 모드팩을 올렸던 VM을 보관하고 있다\n\n2026년 10월 22일에는 이 VM이 중지 상태였다. 현재 메모리 6GiB는 VM 전체의 할당량이며 Java의 최대 힙이나 ATM10의 권장 메모리로 읽으면 안 된다. 패널·운영체제·게임 프로세스가 같은 VM 안에 있으므로 VM 메모리와 게임 프로세스 메모리는 구분해서 봐야 한다.\n\n당시 사용한 ATM10의 세부 팩 버전, 실행 옵션, 게임 포트는 별도 기록이 없어 특정 값으로 적지 않았다. 지금 남아 있는 것은 MinCrafty 안에 ATM10을 구성해 본 경험과 그 작업에 사용한 게임 VM이다.\n\n[게임 관리 VM과 MinCrafty 패널 구성](#post/mincrafty-game-panel)\n\n[홈서버 글 목록으로 돌아가기](#post/homelab-things-i-built)\n",
+      "featured": false,
+      "draft": false,
+      "template": false
+    },
+    {
+      "slug": "hermes-development-vm",
+      "title": "온라인인 Discord 봇이 답하지 않던 이유",
+      "date": "2026-10-22",
+      "description": "Discord 채팅을 받아 Codex의 답을 보내는 과정에서 메시지 수신, 결과 전송, CLI 호출 문제를 하나씩 고쳤다.",
+      "tags": [
+        "자동화·접속",
+        "홈랩",
+        "Proxmox",
+        "Hermes",
+        "systemd"
+      ],
+      "cover": "blue",
+      "image": "",
+      "language": "ko",
+      "translationKey": "hermes-development-vm",
+      "body": "2026년 5월, Proxmox에 개발용 VM을 만들고 Discord에서 요청을 받아 Codex로 작업하는 환경을 붙여 봤다. 처음에는 봇 여섯 개가 모두 온라인으로 표시됐지만 일반 채팅에는 답하지 않았다. 메시지 수신, 결과 전송, CLI 호출, 요청 분류를 차례로 고치면서 간단한 계산과 파일 생성까지 시험했다.\n\n이때 처음 사용한 것은 OMX와 Codex를 연결한 자체 Discord bridge였다. 이를 시험한 다음 날인 5월 27일, 기존 구성을 정리한 뒤 공식 Hermes Agent를 설치했다. 같은 VM에서 진행했고 이름도 Hermes로 묶여 있었지만, 두 실행 환경의 설치 과정과 동작 결과는 다르다.\n\n# 먼저 VM과 도구를 준비했다\n\n5월 26일 처음 만든 VM은 Ubuntu 24.04.4 LTS에 4 vCPU, 메모리 16GB, 부팅 디스크 80G 구성이다. 네트워크는 Proxmox의 `vmbr0`에 연결하고 DHCP를 사용했다. 작업용 Mac의 공개키를 VM 사용자 계정에 등록해 SSH로 들어갈 수 있게 했다.\n\n| 처음 준비한 항목 | 당시 구성 |\n| --- | --- |\n| Node.js / npm | 22.22.2 / 10.9.7 |\n| Codex CLI | 0.133.0 |\n| oh-my-codex | 0.18.3 |\n| Tailscale | 1.98.3, 설치 후 미인증·비활성 |\n| 컨테이너 도구 | rootless Podman, overlay 동작 확인 |\n| 자체 에이전트 사용자 서비스 | `disabled` / `inactive` |\n| systemd linger | `no` |\n\n도구 설치와 실제 작업 시작을 한꺼번에 처리하지는 않았다. 최초 구성에서는 Codex 로그인과 Tailscale 인증을 수동으로 마무리할 항목으로 남겼다. 에이전트 실행용 사용자 서비스와 runner는 만들었지만 실행 표식이 없었고, tmux 세션도 없었다. 재부팅 뒤에도 이 비활성 상태가 유지되는 것까지 확인했다. 이때의 재부팅 검증은 에이전트 자동 실행 성공을 뜻하지 않는다.\n\n# 봇 여섯 개가 온라인이어도 채팅에는 답하지 않았다\n\n같은 날 오후 자체 bridge를 VM의 tmux 세션에서 실행했다. Discord Gateway에서 봇 여섯 개가 모두 `READY`가 됐고, 로그 채널로 보낸 시험 메시지는 HTTP 200을 받았다. `/hermes-status` 명령 등록도 성공했다. bridge를 다시 시작한 뒤에도 같은 결과가 나왔다.\n\n그런데 일반 채팅을 보내면 답이 없었다. bridge 프로세스는 살아 있었고 heartbeat 응답도 들어왔다. 코드를 보니 슬래시 명령을 받는 `INTERACTION_CREATE` 처리는 있었지만, 채팅 메시지를 받는 `MESSAGE_CREATE` 처리가 빠져 있었다. 봇은 온라인이었지만 일반 채팅을 받는 처리가 없었다.\n\n요청을 받아 작업으로 넘기는 처리를 추가하고 `/hermes-task`와 봇 멘션 경로를 붙였다. 일반 채팅을 받는 봇에는 Message Content를 포함한 intent를 적용했다. 이후에는 `MESSAGE_CREATE` 진단과 REST polling 보완 경로도 넣었다. Gateway에서 놓친 메시지를 채널 조회로 읽을 수 있게 한 것이다.\n\n이 단계에서는 polling 요청이 HTTP 200을 받았고, 최근 사람이 보낸 메시지에 본문이 들어 있는 것도 확인했다. 합성 메시지를 넣은 자체 시험에서는 작업이 완료되고 역할별 진행 메시지가 Discord에 올라왔다. 다만 이것만으로 실제 대화 흐름이 완성된 것은 아니었다. 다음 문제는 결과를 어디로 보내느냐였다.\n\n# 완료 메시지는 있는데 정작 답이 없었다\n\nDiscord에는 접수·진행·완료 안내가 뜨는데 요청한 채널에 답변 본문이 나타나지 않았다. 최종 결과는 로그 채널에만 보내고, 원래 채널에는 결과를 로그에 올렸다는 안내만 보내고 있었다.\n\n최종 결과를 요청이 시작된 채널에 직접 보내고, 로그 채널에는 같은 내용을 복사하도록 바꿨다. 함께 발견한 문제도 있었다. 본문이 비어 있는 Gateway 이벤트를 먼저 받으면, 해당 메시지를 이미 처리한 것으로 표시했다. 나중에 REST polling으로 본문을 읽어도 중복 메시지로 판단해 건너뛸 수 있었다.\n\n본문이 없거나 실행 조건에 해당하지 않는 이벤트는 처리 완료로 표시하지 않도록 고쳤다. 다시 실행한 뒤 요청 채널에서 완료 표시와 서버·에이전트 상태 본문이 함께 있는 최종 메시지를 확인했다. 단순히 “끝났다”는 알림이 아니라 실제 결과를 읽을 수 있는 상태가 된 것이다.\n\n# 자연어 요청을 넘기자 CLI 인자에서 막혔다\n\n채널 응답을 고친 뒤에는 자연어 요청에서 Codex CLI 오류가 그대로 돌아왔다.\n\n```text\nunexpected argument '--ask-for-approval'\n```\n\nVM에 설치된 Codex CLI는 0.133.0이었다. bridge가 넘기는 예전 승인 정책 인자를 이 버전의 `codex exec`가 받지 못했다. 당시 버전에 맞는 설정 인자로 호출을 고친 뒤, 직접 실행 시험에서는 `OK`가 나왔다. bridge를 통과하는 자연어 시험에서는 `2+2`에 `4`가 반환됐고 종료 코드도 0이었다.\n\n실패를 완료로 표시하던 부분도 같이 고쳤다. Codex가 0이 아닌 코드로 끝나면 `codex_error`로 남기고 오류를 요약하도록 했다. 작업 완료 알림만 보고 성공으로 판단하지 않으려면, 프로세스의 종료 결과와 실제 답변이 함께 있어야 했다.\n\n# 파일을 만들어 달라는 요청이 상태 조회로 바뀌었다\n\n이번에는 `agent-todo.md` 파일을 만들어 달라는 요청에 서버 상태만 돌아왔다. 상태 조회 분류기가 `agent`, `에이전트`, `server`, `서버`처럼 넓은 단어를 잡고 있었다. 에이전트 작업 목록을 작성하는 요청도 그 단어가 들어갔다는 이유로 상태 조회에 빠졌다.\n\n`만들`, `작성`, `파일`, `.md`처럼 실제 작업을 나타내는 표현이 있으면 Codex 실행으로 보내도록 분류를 고쳤다. 반대로 서버 성능이나 에이전트 상태를 묻는 표현은 기존 상태 조회로 보냈다. 같은 두 요청을 넣어 각각 `CODEX`와 `STATUS`로 나뉘는 것을 확인했다.\n\n분류를 고쳐도 파일 생성은 한 번 더 막혔다. 당시 VM에서는 `workspace-write` 환경의 `apply_patch`와 bubblewrap 관련 오류로 쓰기가 실패했다. 시험 중에는 실행 격리를 완화한 조건에서 파일 생성이 되는 것을 확인했고, 작업 공간 밖으로 나가지 않도록 하는 bridge 검사와 프롬프트 제한은 남겼다. 이 조건은 격리를 유지한 운영 구성이 아니므로 그대로 운영 절차로 삼을 수는 없었다.\n\n그 시험에서는 작업 공간에 `agent-todo.md`가 생성됐고, 번호가 붙은 항목 10개와 종료 코드 0을 확인했다. 한편 관리자 채널의 권한 설정은 HTTP 403으로 실패한 부분이 남아 있었다. 파일 생성 성공과 별개로, 인증·권한 구성이 모두 끝난 상태는 아니었다.\n\n# 자체 bridge를 정리하고 공식 Hermes를 설치했다\n\n5월 27일 새벽에는 에이전트 관련 프로그램과 작업물을 정리하고 개발용 VM을 다시 준비했다. VM과 Tailscale·SSH 접속 경로는 유지했다. 이어 설치한 공식 Hermes Agent는 0.14.0이며, Python 3.11.15와 Codex CLI 0.133.0, Node.js 22.22.3 구성이었다.\n\n이때 공식 Hermes의 `hermes-gateway.service`는 사용자 서비스로 등록됐고 `enabled`, `active` 상태였다. 다만 로그에는 활성화된 메시징 플랫폼이 없다는 경고가 있었다. 모델과 플랫폼 인증·허용 사용자 설정도 마무리할 항목으로 남았다. Discord 메시지와 파일 생성 시험은 앞서 사용한 자체 bridge에서 수행한 것이고, 공식 gateway는 실행 상태를 확인하는 데까지 진행했다.\n\nlinger도 시점을 구분해야 한다. 당시 최종 교정 뒤의 값은 `Linger=no`였다. gateway가 실행 중이어도 로그아웃 뒤의 지속 실행까지 확인한 것은 아니다. [systemd의 loginctl 문서](https://www.freedesktop.org/software/systemd/man/257/loginctl.html#enable-linger%20%5BUSER%E2%80%A6%5D)에서 설명하는 linger는 사용자 서비스 관리자의 생명주기에 관한 설정이며, 서비스 설치나 플랫폼 설정을 대신하지 않는다.\n\n# 지금 남아 있는 것은 다시 접속할 수 있는 VM이다\n\n2026년 10월 22일에는 개발용 VM이 실행 중이고 할당 메모리는 8GiB였다. 5월에 처음 만든 16GB 구성과는 달라져 있었다. Tailscale 주소를 통한 직접 SSH 접속은 됐고 `tailscaled`와 `ssh`는 모두 `active`였다.\n\n반면 `hermes` 명령은 현재 사용자 PATH에서 찾지 못했고, `hermes-gateway.service`는 `LoadState=not-found`, `ActiveState=inactive`였다. 이때 linger는 `yes`였다. 5월의 실행 결과가 현재까지 이어지는 것도 아니고, linger가 켜져 있다고 현재 등록돼 있지 않은 gateway가 생기는 것도 아니다. 다시 작업을 시작할 때는 이 접속 가능한 VM 위에서 실행 파일과 서비스, 모델·메시징 설정부터 맞춰야 한다.\n\n접속 경로는 [Tailscale과 SSH로 홈서버에 접속하기](#post/tailscale-ssh-homelab)에 정리했다.\n\n[홈서버 글 목록으로 돌아가기](#post/homelab-things-i-built)\n",
+      "featured": false,
+      "draft": false,
+      "template": false
+    },
+    {
+      "slug": "home-assistant-vm",
+      "title": "Proxmox에 Home Assistant VM을 올려 봤다",
+      "date": "2026-10-22",
+      "description": "",
+      "tags": [
+        "자동화·접속",
+        "홈랩",
+        "Proxmox",
+        "Home Assistant"
+      ],
+      "cover": "green",
+      "image": "",
+      "language": "ko",
+      "translationKey": "home-assistant-vm",
+      "body": "Proxmox에 홈 자동화용 VM을 따로 만들고 Home Assistant Core와 Supervisor를 올렸다. 여기에 Matter, Tailscale, SSH add-on을 함께 구성했다. NAS가 파일을 맡고 데이터 처리 VM이 데이터베이스를 맡는 것처럼, Home Assistant 환경도 자기 디스크와 네트워크 인터페이스를 가진 VM으로 나눴다.\n\n# 2코어와 4GiB, 로컬 디스크로 만든 환경\n\n2026년 10월 22일 기준으로 이 VM에는 CPU 2코어와 메모리 4096MiB를 할당해 뒀다. 디스크는 32G이며 Proxmox의 `local-lvm`에 있다. Home Assistant가 사용하는 시스템 디스크를 NAS의 SMB 공유에 둔 구성은 아니다.\n\n| 항목 | 설정 |\n| --- | --- |\n| CPU | 1소켓 · 2코어, `cpu: host` |\n| 메모리 | 4096MiB, 즉 4GiB |\n| 머신 · 펌웨어 | `q35` · `OVMF`(UEFI) |\n| 시스템 디스크 | `sata0`, `local-lvm`, 32G |\n| 부팅 대상 | `order=sata0` |\n| 네트워크 | VirtIO NIC → `vmbr0`, `firewall=1` |\n\n이 VM의 부팅 디스크는 `sata0`다. 같은 서버의 NAS나 개발용 VM에서 사용하는 `scsi0`와 연결 위치가 다르다. VM 설정에 SCSI 컨트롤러 항목도 있지만, 실제 부팅 대상은 SATA 디스크로 지정돼 있다.\n\n```text\nbios: ovmf\nboot: order=sata0\ncores: 2\nmemory: 4096\nsata0: local-lvm:<시스템 볼륨>,discard=on,size=32G,ssd=1\n```\n\n`discard=on`과 `ssd=1`도 이 디스크에 들어 있다. 각각 게스트의 discard 요청을 아래 저장소로 전달하는 옵션과 SSD라는 장치 특성을 게스트에 알려 주는 옵션이다. 이 값이 애플리케이션의 성능 측정 결과를 뜻하지는 않는다. [Proxmox 디스크 옵션](https://github.com/proxmox/pve-docs/blob/c673ee6c62ec2bf4e33a05fcd1a0f0a29b18d2f7/qm.adoc#L307-L351)\n\n# Home Assistant 옆에 접속 통로도 함께 뒀다\n\nVM 안에는 Core와 Supervisor뿐 아니라 Matter와 원격 접속용 add-on도 있었다. 당시 서비스 기록에 남은 구성은 다음과 같다.\n\n| 구분 | 올려 둔 구성 |\n| --- | --- |\n| Home Assistant | Core, Supervisor |\n| 기기 연결 관련 | Matter |\n| 원격 접속 관련 | Tailscale, SSH add-on |\n\n네트워크 인터페이스는 다른 VM들과 같은 `vmbr0`에 연결했다. Proxmox에서 VM까지 이어지는 기본 네트워크와 VM 안에 설치한 Tailscale·SSH add-on이 함께 있는 구조다. Proxmox 호스트에 SSH로 들어가는 것과 Home Assistant VM 안으로 들어가는 것은 목적지가 다르다.\n\n여기까지는 홈 자동화 환경과 접속 수단을 갖춘 작업이다. Matter의 설치와 기기 페어링, 실제 제어는 각각 다른 단계다. 기기별 연결과 자동화 규칙의 실행은 별도 시험이 필요한 부분으로 남아 있다.\n\n# NAS 뒤에 시작하도록 둔 순서\n\n호스트가 켜질 때의 설정은 `onboot: 1`, `startup: order=50,up=30`이다. 같은 서버의 NAS는 `order=10,up=10`이므로 자동 시작 순서상 NAS가 앞에 있다.\n\n```text\nNAS VM             order=10, up=10\nHome Assistant VM  order=50, up=30\n```\n\n이 숫자는 서비스 간 연결을 검사하는 규칙이 아니다. `up=30`은 이 VM을 시작한 뒤 다음 시작 대상으로 넘어가기 전에 기다리는 시간이다. Home Assistant 초기화나 NAS 공유 준비가 끝났다는 응답을 기다리는 설정은 아니다. [자동 시작 순서와 대기 시간](https://github.com/proxmox/pve-docs/blob/c673ee6c62ec2bf4e33a05fcd1a0f0a29b18d2f7/qm.adoc#L1513-L1556)\n\n2026년 10월 22일에는 Home Assistant VM을 중지해 둔 상태다. 자동 시작 설정은 남아 있지만 현재 전원이 켜져 있다는 뜻은 아니다. Core·Supervisor와 add-on을 올려 봤던 환경은 이 32G 디스크를 가진 VM으로 보관하고 있다.\n\n[홈서버 글 목록으로 돌아가기](#post/homelab-things-i-built)\n",
+      "featured": false,
+      "draft": false,
+      "template": false
+    },
+    {
+      "slug": "homelab-things-i-built",
+      "title": "내 홈서버 구축 기록",
+      "date": "2026-10-22",
+      "description": "Proxmox VM 설정부터 TrueNAS, 원격 접속, 게임 서버까지 홈서버 글을 네 주제로 묶었다.",
+      "tags": [
+        "서버 설정",
+        "홈랩",
+        "Proxmox",
+        "Tailscale",
+        "서버 운영"
+      ],
+      "cover": "blue",
+      "image": "",
+      "language": "ko",
+      "translationKey": "homelab-things-i-built",
+      "body": "내 홈서버는 Proxmox 위에 저장소, 자동화, 게임 서버, 개발 환경을 나눠 둔 구성이다. VM을 만들고 서비스를 올리면서 해본 작업을 네 가지 주제로 묶었다. 각 글에는 실제 설정과 수정 과정을 따로 남겼다.\n\nVM 설정은 [Ubuntu 템플릿](#post/ubuntu-vm-template)부터 보면 기본 구성이 드러난다. [TrueNAS 구성](#post/proxmox-truenas-setup)에는 디스크와 공유, 백업을 연결한 방식이 담겨 있다.\n\n# 서버 설정\n\n[홈서버 VM마다 CPU와 메모리를 다르게 둔 구성](#post/proxmox-vm-cpu-memory)\n\nVM 열 개의 자원 배정과 CPU 유형을 비교하고, q35·OVMF·SeaBIOS 설정을 구분했다.\n\n[Proxmox VM 디스크, local-lvm과 VirtIO SCSI 설정](#post/proxmox-vm-disks)\n\n시스템 디스크와 물리 데이터 디스크, 컨트롤러·discard·I/O 스레드·백업 제외 옵션을 다룬다.\n\n[VM 네트워크를 vmbr0에 연결하고 Cloud-Init 주소를 나눴다](#post/proxmox-vm-network-cloud-init)\n\n공통 브리지와 VirtIO NIC, DHCP·고정 주소, Cloud-Init 매체의 연결 관계를 정리했다.\n\n[NAS부터 시작하도록 둔 VM 부팅 순서](#post/proxmox-vm-startup-order)\n\n자동 시작 여부와 시작 순서·대기 시간, VM 안의 부팅 장치, 게스트 에이전트의 응답을 구분했다.\n\n[새 VM의 바탕으로 남겨 둔 Ubuntu 템플릿](#post/ubuntu-vm-template)\n\n10G 시스템 디스크와 Cloud-Init 드라이브를 붙인 Ubuntu 24.04 템플릿이다. 개발·데이터 VM의 주소와 자원 설정도 비교했다.\n\n# NAS·서비스\n\n[Proxmox에 올린 TrueNAS, 실제 디스크와 공유 구성](#post/proxmox-truenas-setup)\n\n로컬 부팅 디스크와 물리 데이터 디스크를 나누고, ZFS 풀·SMB 공유·VM 백업 저장소를 연결한 구성이다.\n\n[TrueNAS에 Nextcloud를 올리고 파일과 DB 저장 공간을 나눴다](#post/nextcloud-truenas-files)\n\n파일 데이터는 `nc_pool`에, 앱과 데이터베이스는 앱 관리 볼륨에 연결했다. 백그라운드 작업과 상태 API 응답까지 다룬다.\n\n[TrueNAS에 Immich를 올린 구성, 사진 저장소와 머신러닝 서비스](#post/immich-truenas-photos)\n\n사진 데이터는 `tank`에 두고 서버·데이터베이스·머신러닝 서비스를 함께 실행하는 구성이다.\n\n[TrueNAS에 Netdata를 붙여 서버 상태를 보는 환경 만들기](#post/netdata-truenas-monitoring)\n\nNAS 안의 모니터링 앱과 19999 포트, 저장 볼륨, 수집 옵션을 정리했다.\n\n[PostgreSQL과 데이터 처리 서비스를 한 VM에 모았다](#post/postgresql-data-services-vm)\n\nPostgreSQL과 네 처리 서비스를 함께 둔 환경이다. Cloud-Init의 고정 주소 설정과 로컬 디스크 구성을 다룬다.\n\n# 자동화·접속\n\n[n8n을 올려 쓴 전용 VM, 자원과 네트워크 설정](#post/n8n-automation-vm)\n\n2코어·6GiB·60G VM에 고정 주소와 Cloud-Init, 자동 시작 순서를 둔 구성이다. VM 전원 상태와 앱에 접속할 수 있는 상태도 구분했다.\n\n[WOL 포털로 PC를 켜고 Windows·Ubuntu 부팅까지 연결하기](#post/wol-power-portal)\n\n브로드캐스트 수정과 패킷 재전송부터 Windows 준비 대기, 일회성 Ubuntu 부팅, OS별 전원 명령을 고쳐 온 과정이다.\n\n[Tailscale과 SSH로 홈서버에 접속하기](#post/tailscale-ssh-homelab)\n\n개발용 VM으로 직접 접속하는 경로와 Proxmox 호스트를 거치는 경로, 접속 상태와 애플리케이션 상태의 차이를 다룬다.\n\n[Proxmox에 Home Assistant VM을 올려 봤다](#post/home-assistant-vm)\n\n2코어·4GiB VM에 Core, Supervisor, Matter와 원격 접속용 구성을 올렸다. SATA 부팅 디스크와 NAS 뒤에 시작하도록 둔 설정도 함께 정리했다.\n\n[온라인인 Discord 봇이 답하지 않던 이유](#post/hermes-development-vm)\n\n자체 Discord bridge의 메시지 수신·답변 전송·CLI 호출 오류를 고친 과정부터 공식 Hermes 설치와 이후 VM 상태까지 이어 썼다.\n\n# 게임 서버\n\n[게임 관리 VM에 MinCrafty 패널을 올려 봤다](#post/mincrafty-game-panel)\n\n4코어·6GiB·80G VM에 웹 관리 패널을 올리고 8443 포트 응답과 대시보드 리다이렉트를 확인한 내용이다.\n\n[MinCrafty 안에 ATM10 모드팩 서버를 올려 봤다](#post/atm10-mincrafty-server)\n\n패널 안에서 ATM10을 구성해 본 경험이다. VM·관리 패널·모드팩의 역할과 서버팩 버전, Java, 게임 접속을 구분했다.\n",
+      "featured": true,
+      "draft": false,
+      "template": false
+    },
+    {
+      "slug": "immich-truenas-photos",
+      "title": "TrueNAS에 Immich를 올린 구성, 사진 저장소와 머신러닝 서비스",
+      "date": "2026-10-22",
+      "description": "",
+      "tags": [
+        "NAS·서비스",
+        "홈랩",
+        "TrueNAS",
+        "Immich",
+        "사진 서버"
+      ],
+      "cover": "green",
+      "image": "",
+      "language": "ko",
+      "translationKey": "immich-truenas-photos",
+      "body": "홈서버에는 파일용 Nextcloud와 별도로 사진 서버인 Immich도 올려 두었다. Immich는 사진을 담는 저장 공간 외에 서버, 데이터베이스, 작업 큐, 머신러닝 서비스가 함께 돌아간다. 내 TrueNAS에서도 이 역할들이 서로 다른 서비스로 나뉘어 있다.\n\n2026년 10월 22일 기준 앱 버전은 **v3.3.0**, TrueNAS 앱 차트는 **1.14.47**이다. 앱은 실행 중이고 웹 포트는 `2283`으로 게시돼 있다.\n\n# 사진 데이터는 tank에, DB는 앱 볼륨에 둔다\n\nImmich의 `data` 항목은 `tank` 안의 호스트 경로에 연결돼 있다. Nextcloud 파일을 둔 단일 디스크 풀 `nc_pool`과는 다른 저장 위치다. `tank`는 4TB 디스크 두 개를 미러로 묶은 ZFS 풀이다.\n\n| 저장 항목 | 내 설정 |\n| --- | --- |\n| 앱의 데이터 영역 `data` | `tank`의 `host_path` |\n| PostgreSQL 데이터 `postgres_data` | `ix_volume` |\n| 머신러닝 캐시 `ml_cache` | `temporary` |\n| 추가 저장소 | 없음 |\n\n사진 데이터를 두는 경로와 DB 볼륨은 분리돼 있다. 머신러닝 캐시도 사진 데이터와 같은 호스트 경로를 지정한 항목이 아니라 `temporary`로 설정돼 있다. 같은 앱에 속해 있어도 모두 같은 방식으로 보관되는 것은 아니다.\n\n미러는 이 저장 경로 아래에 있는 디스크 구성이다. 사진을 실수로 삭제했을 때 이전 상태를 되돌리는 백업과는 역할이 다르다. 또 사진 파일 경로와 DB가 따로 있으므로 앱 전체를 옮기거나 복구할 때는 두 영역을 함께 다뤄야 한다. Immich의 [공식 구조 설명](https://docs.immich.app/developer/architecture/)에서도 파일을 처리하는 서버와 영구 메타데이터를 보관하는 PostgreSQL을 구분한다.\n\n# 서버와 머신러닝을 별도 서비스로 실행한다\n\n현재 실행 중인 서비스는 네 개다.\n\n| 서비스 이름 | 현재 구성 |\n| --- | --- |\n| `server` | Immich 서버 |\n| `pgvecto` | PostgreSQL 18 · VectorChord 1.1.1 이미지 |\n| `redis` | Valkey 9.1.2 이미지 |\n| `machine-learning` | 머신러닝 서비스 |\n\n`pgvecto`나 `redis`라는 서비스 이름만 보고 실행 제품을 단정하면 실제 이미지와 어긋난다. 내 구성의 DB 이미지에는 VectorChord가 포함돼 있고, Redis 역할의 서비스는 Valkey 이미지를 사용한다.\n\n공식 구조에서 서버는 API와 백그라운드 작업을 처리하고, PostgreSQL은 메타데이터를 보관한다. Redis는 작업 큐를 지원하며 머신러닝은 별도 서비스가 맡는다. 이 구조를 내 서비스 목록과 맞춰 보면 사진 서버를 웹 프로세스 하나로만 볼 수 없는 이유가 드러난다. [Immich 구성 요소별 역할](https://docs.immich.app/developer/architecture/)\n\n내 앱에서는 `enable_ml`이 켜져 있고 `machine-learning` 서비스도 실행 중이다. 기능을 켠 상태와 실제 사진으로 얼굴 인식·검색 작업을 끝낸 상태는 구분해야 한다. 여기서 설명하는 것은 머신러닝 서비스를 포함해 앱을 실행한 구성이다.\n\n앱의 자원 제한 설정은 CPU `4`, 메모리 `8192 MB`다. 메모리는 카탈로그 표기의 MB를 사용했다. [Nextcloud](#post/nextcloud-truenas-files)의 CPU `2`·`4096 MB`보다 큰 값이지만, 실제 CPU 사용률이나 처리 속도를 측정한 수치는 아니다. TrueNAS VM 안에서 각 앱에 지정한 제한이다.\n\n# 2283 포트의 API 응답까지 확인했다\n\n실행 상태에 더해 `/api/server/ping`으로 요청을 보냈다. HTTP `200`과 다음 응답이 돌아왔다.\n\n```json\n{\"res\":\"pong\"}\n```\n\n앱이 게시한 포트에서 서버 API까지 응답하는 상태다. 이 점검에는 사진 업로드, 모바일 자동 백업, 얼굴 인식 작업은 포함하지 않았다.\n\n[TrueNAS의 디스크와 공유 구성](#post/proxmox-truenas-setup) · [홈서버 글 목록](#post/homelab-things-i-built)\n",
+      "featured": false,
+      "draft": false,
+      "template": false
+    },
+    {
+      "slug": "mincrafty-game-panel",
+      "title": "게임 관리 VM에 MinCrafty 패널을 올려 봤다",
+      "date": "2026-10-22",
+      "description": "",
+      "tags": [
+        "게임 서버",
+        "홈랩",
+        "Proxmox",
+        "MinCrafty"
+      ],
+      "cover": "peach",
+      "image": "",
+      "language": "ko",
+      "translationKey": "mincrafty-game-panel",
+      "body": "홈서버에서 게임 관리용 VM을 따로 만들고 MinCrafty 패널을 올려 봤다. 이 환경 안에서는 ATM10 마인크래프트 모드팩 서버도 구성해 봤다. 관리 패널은 8443/TCP로 웹 요청을 받았고 `/panel/dashboard` 경로로 리다이렉트하는 응답이 돌아왔다. 이 글은 그 패널을 올려 둔 VM과 관리 화면의 구성을 다룬다.\n\n# 게임 관리 환경은 4코어와 80G 디스크로 나눴다\n\n같은 Proxmox 호스트에는 NAS와 데이터 처리 VM도 있지만, 게임 관리 환경에는 별도의 CPU·메모리와 디스크를 할당했다. 2026년 10월 22일 기준으로 남아 있는 설정은 다음과 같다.\n\n| 항목 | 설정 |\n| --- | --- |\n| CPU | 1소켓 · 4코어, `cpu: host` |\n| 메모리 | 6144MiB, 즉 6GiB |\n| 머신 · 펌웨어 | `q35` · `OVMF`(UEFI) |\n| 시스템 디스크 | `scsi0`, `local-lvm`, 80G |\n| SCSI 컨트롤러 | `virtio-scsi-single` |\n| 네트워크 | VirtIO NIC → `vmbr0`, `firewall=1` |\n\n메모리 6GiB는 이 VM 전체에 할당한 양이다. 게임 프로세스의 Java 힙을 6GiB로 지정했다는 뜻은 아니다. 별도의 게임 실행 인자나 월드별 메모리 설정은 이 VM 자원표에서 알 수 없다.\n\n시스템 디스크에는 `discard=on,iothread=1,ssd=1`이 들어 있다. 게스트의 discard 전달, 별도 I/O 스레드, SSD 장치 표시 옵션을 사용한 구성이다. NAS의 물리 디스크를 직접 붙인 방식과 달리 이 VM의 80G 디스크는 `local-lvm`의 볼륨이다. [Proxmox 디스크 옵션](https://github.com/proxmox/pve-docs/blob/c673ee6c62ec2bf4e33a05fcd1a0f0a29b18d2f7/qm.adoc#L307-L351)\n\n# 시스템 디스크에서 부팅하고 브리지로 연결했다\n\n부팅 순서에는 시스템 디스크, CD-ROM, 네트워크가 들어 있다. 그중 첫 번째가 `scsi0`다.\n\n```text\nboot: order=scsi0;ide2;net0\nscsihw: virtio-scsi-single\nscsi0: local-lvm:<시스템 볼륨>,discard=on,iothread=1,size=80G,ssd=1\n```\n\nVirtIO 네트워크 인터페이스는 `vmbr0`에 연결돼 있다. 패널은 이 VM 안에서 응답하는 서비스이므로 Proxmox 관리 화면과는 접속 대상이 다르다. VM NIC의 `firewall=1`도 켜져 있지만, 이 값 하나로 8443 포트의 공개 범위나 허용된 출발지를 설명할 수는 없다. 실제 접근 범위는 적용된 규칙과 접속 경로까지 함께 봐야 한다.\n\n# 8443 포트에서 대시보드 경로가 돌아왔다\n\n패널을 올렸을 때 남긴 응답 기록은 포트와 웹 서버, 리다이렉트 경로를 보여 준다.\n\n| 항목 | 당시 응답 |\n| --- | --- |\n| 웹 패널 포트 | 8443/TCP |\n| 웹 서버 식별 | Tornado |\n| 리다이렉트 경로 | `/panel/dashboard` |\n\n포트가 열려 있다는 기록에 더해, 웹 요청에 패널의 경로를 반환했다는 결과가 남았다. 관리용 웹 애플리케이션이 요청을 받아 응답하는 단계까지 간 것이다.\n\n8443 응답은 관리용 웹 애플리케이션의 동작을 보여 준다. 게임 서버에 사용하는 포트와 역할이 다르므로 이 값을 게임 접속 주소에 그대로 대응시키면 안 된다.\n\n이 패널 안에서 실제로 올려 본 모드팩은 ATM10이다. 관리 도구를 준비한 작업과 모드팩 서버를 구성한 작업을 나눠, 서버팩과 게임 실행 환경에 관한 내용은 [MinCrafty 안에 ATM10 모드팩 서버를 올려 봤다](#post/atm10-mincrafty-server)에 따로 적었다.\n\n# 시작 순서 설정은 남아 있지만 지금은 중지 상태다\n\nVM에는 `startup: order=80,up=30,down=10`이 남아 있다. 시작 순서 값은 NAS의 10, 데이터 처리 VM의 50보다 뒤다. `up=30`은 다음 VM 시작까지 기다리는 시간이고 `down=10`은 종료 대기 제한이다. 둘 다 게임 서버가 준비됐다는 신호는 아니다. [시작·종료 설정](https://github.com/proxmox/pve-docs/blob/c673ee6c62ec2bf4e33a05fcd1a0f0a29b18d2f7/qm.adoc#L1513-L1556)\n\n반면 이 VM에는 `onboot: 1`이 설정돼 있지 않다. 시작 순서가 있다는 이유로 호스트를 켤 때 자동으로 시작하는 VM이라고 보면 안 된다.\n\n2026년 10월 22일에는 VM이 중지 상태였다. 위의 8443 포트 응답은 패널을 실행했을 때의 기록이고, 현재는 80G 시스템 디스크와 VM 설정을 남겨 둔 상태다.\n\n[홈서버 글 목록으로 돌아가기](#post/homelab-things-i-built)\n",
+      "featured": false,
+      "draft": false,
+      "template": false
+    },
+    {
+      "slug": "netdata-truenas-monitoring",
+      "title": "TrueNAS에 Netdata를 붙여 서버 상태를 보는 환경 만들기",
+      "date": "2026-10-22",
+      "description": "",
+      "tags": [
+        "NAS·서비스",
+        "홈랩",
+        "TrueNAS",
+        "Netdata",
+        "모니터링"
+      ],
+      "cover": "green",
+      "image": "",
+      "language": "ko",
+      "translationKey": "netdata-truenas-monitoring",
+      "body": "TrueNAS에는 파일·사진 앱과 함께 Netdata도 올려 뒀다. NAS 안에서 실행되는 모니터링 앱으로, Nextcloud와 Immich가 있는 환경에 상태를 볼 통로를 추가한 구성이다. 2026년 10월 22일에는 앱이 실행 중이었고 로컬 API도 응답했다.\n\n# Proxmox 호스트가 아니라 NAS 안에 둔 앱\n\n내 NAS는 Proxmox의 VM이다. 그 VM 안에서 TrueNAS가 실행되고, Netdata는 TrueNAS Apps에 등록돼 있다. 따라서 이 글의 Netdata는 물리 Proxmox 호스트에 직접 설치한 에이전트가 아니다.\n\n```text\nProxmox\n  └─ TrueNAS VM\n       ├─ Nextcloud\n       ├─ Immich\n       └─ Netdata\n```\n\nNetdata의 로컬 대시보드는 CPU 사용량을 비롯한 서버 상태를 보여 주는 화면이다. TrueNAS 앱의 Web Portal도 이 대시보드로 연결된다. 다만 앱 하나가 실행 중이라는 이유로 다른 VM이나 물리 호스트 전체까지 수집하도록 구성됐다고 볼 수는 없다. [TrueNAS의 Netdata 대시보드 안내](https://apps.truenas.com/resources/deploy-netdata/#using-the-netdata-web-portal)\n\n# 19999 포트와 별도 앱 자원 제한\n\n현재 앱의 설정값은 다음과 같다. 버전은 Netdata 자체 버전과 TrueNAS 앱 패키지 버전을 나눠 적었다.\n\n| 항목 | 2026년 10월 22일 구성 |\n| --- | --- |\n| Netdata 버전 | `v2.12.1` |\n| TrueNAS 앱 패키지 | `1.4.19` |\n| 앱 상태 | `RUNNING` |\n| 웹 포트 | `19999`, `published` |\n| CPU 제한 설정 | `2` |\n| 메모리 제한 설정 | `1024 MB`, 카탈로그 표기 기준 |\n| 실행 서비스 | `netdata`, `running` |\n\n이 제한값은 NAS VM 전체의 CPU·메모리와 별개인 앱 설정이다. 웹 포트의 `published`도 호스트 쪽에 포트를 연결하는 방식이며, 인터넷에 공개했다는 뜻으로 쓰지는 않는다. 외부 접속 여부는 네트워크 경로와 방화벽에 달려 있다.\n\n# 설정·라이브러리·캐시를 각각 남기는 구성\n\n스토리지 항목은 `config`, `lib`, `cache`로 나뉘며 세 항목 모두 `ix_volume`을 사용한다. 별도의 추가 스토리지 연결은 없다.\n\n| 스토리지 항목 | 연결 방식 |\n| --- | --- |\n| `config` | 앱 관리 볼륨 `ix_volume` |\n| `lib` | 앱 관리 볼륨 `ix_volume` |\n| `cache` | 앱 관리 볼륨 `ix_volume` |\n\n사진 파일을 `tank`에 연결한 Immich나 파일 데이터를 `nc_pool`에 연결한 Nextcloud와 달리, Netdata의 이 세 저장 항목은 앱 관리 볼륨이다. 같은 NAS에서 실행해도 앱마다 필요한 저장 경로를 다르게 구성해 둔 셈이다.\n\nSMART와 Intel GPU 수집 옵션은 모두 꺼져 있다. 그러므로 이 구성만 보고 디스크 SMART나 GPU 상태까지 수집하고 있다고 설명할 수는 없다. 모니터링 화면을 마련한 것과 어떤 항목을 수집하도록 켰는지는 구분해야 한다.\n\n# 로컬 API가 설치된 버전을 반환했다\n\nNAS 안에서 19999 포트의 `/api/v1/info`에 읽기 요청을 보냈다. HTTP 상태는 200이었고 응답의 버전 필드는 다음과 같았다.\n\n```json\n{\"version\":\"v2.12.1\"}\n```\n\n앱 목록의 실행 상태와 HTTP 응답, 반환된 버전이 맞아떨어졌다. 이 결과는 Netdata의 정보 API까지 동작한다는 뜻이다. 경보 전달이나 특정 병목을 발견해 성능을 개선했다는 경험까지 포함하는 것은 아니다. 현재는 파일·사진 서비스를 올려 둔 NAS에 모니터링 앱과 응답 가능한 대시보드 포트를 함께 마련한 상태다.\n\n[TrueNAS의 디스크·공유·백업 구성](#post/proxmox-truenas-setup)\n\n[홈서버 글 목록으로 돌아가기](#post/homelab-things-i-built)\n",
+      "featured": false,
+      "draft": false,
+      "template": false
+    },
+    {
+      "slug": "nextcloud-truenas-files",
+      "title": "TrueNAS에 Nextcloud를 올리고 파일과 DB 저장 공간을 나눴다",
+      "date": "2026-10-22",
+      "description": "",
+      "tags": [
+        "NAS·서비스",
+        "홈랩",
+        "TrueNAS",
+        "Nextcloud",
+        "파일 서버"
+      ],
+      "cover": "blue",
+      "image": "",
+      "language": "ko",
+      "translationKey": "nextcloud-truenas-files",
+      "body": "TrueNAS에는 SMB 공유와 별도로 Nextcloud도 올려 두었다. SMB가 공유 폴더를 여는 통로라면, Nextcloud는 웹 애플리케이션과 데이터베이스를 함께 운영하는 파일 서버다. 내 구성에서도 사용자 파일, 앱 파일, PostgreSQL 데이터의 저장 방식이 나뉜다.\n\n2026년 10월 22일 기준 Nextcloud는 **35.0.2**, TrueNAS 앱 차트는 **2.3.85**다. 앱은 실행 중이며 웹 포트는 `30027`로 게시돼 있다.\n\n# 사용자 파일은 nc_pool의 호스트 경로에 둔다\n\nNextcloud의 `data` 저장소는 `nc_pool` 안의 호스트 경로를 사용한다. 앱 설정에서 `host_path`로 연결한 공간이다. 반면 `html`과 `postgres_data`는 TrueNAS가 관리하는 `ix_volume`으로 잡혀 있다.\n\n| 저장 항목 | 내 설정 | 구분하는 내용 |\n| --- | --- | --- |\n| `data` | `nc_pool`의 `host_path` | 사용자 파일을 두는 공간 |\n| `html` | `ix_volume` | Nextcloud 앱 파일 영역 |\n| `postgres_data` | `ix_volume` | PostgreSQL 데이터 영역 |\n\n이 구분은 파일만 따로 꺼내 놓는 것과 앱 전체를 보존하는 일이 다르다는 점을 보여 준다. 사용자 파일이 있는 경로와 DB가 있는 볼륨이 서로 다르므로, 파일 경로 하나만 알아서는 Nextcloud의 전체 저장 구성을 설명할 수 없다. [TrueNAS의 Nextcloud 배포 안내](https://apps.truenas.com/resources/deploy-nextcloud/)도 앱 데이터, 사용자 파일, PostgreSQL 저장소를 각각 구분한다.\n\n`nc_pool`은 2TB 디스크 하나로 만든 ZFS 풀이다. 같은 NAS의 `tank`는 4TB 디스크 두 개의 미러지만, Nextcloud 파일을 둔 `nc_pool`에는 그 미러 구성이 적용되지 않는다. 앱의 저장 항목을 나누는 것과 디스크 장애에 대비한 복사본을 두는 일도 별개다.\n\n# 웹 앱 옆에서 DB와 주기 작업이 함께 돈다\n\n실행 중인 서비스는 `nextcloud`, `cron`, `postgres`, `redis` 네 개다. 웹 요청을 받는 앱 하나만 있는 구성이 아니다.\n\nPostgreSQL은 18 계열 이미지가 선택돼 있고, 실행 이미지의 태그는 **18.6**이다. 서비스 이름이 `redis`인 컨테이너는 실제로 **Valkey 9.1.2** 이미지를 사용한다. 따라서 서비스 목록의 이름과 실행 이미지의 제품명을 구분해서 봐야 한다. Nextcloud 공식 문서에서 Redis는 캐시와 파일 잠금에 쓰이는 구성 요소로 설명된다. [캐시 구성 문서](https://docs.nextcloud.com/server/latest/admin_manual/configuration_server/caching_configuration.html)\n\n주기 작업은 별도의 `cron` 서비스가 맡는다. 내 앱에서는 cron이 켜져 있고 일정은 다음과 같다.\n\n```text\ncron: enabled\nschedule: */5 * * * *\n```\n\n5분마다 실행하도록 설정한 것이다. 사용자가 웹 화면을 여는 시점과 별도로 주기 작업을 실행하는 구성이며, 이 일정 자체가 개별 작업의 완료 기록은 아니다. 이미지 처리용 Imaginary 옵션은 꺼져 있다.\n\n앱의 자원 제한 설정은 CPU `2`, 메모리 `4096 MB`다. 메모리 단위는 TrueNAS 카탈로그의 표기를 따랐다. TrueNAS VM 전체에 할당한 6코어·24GiB와는 다른 층의 설정이다. NAS VM 안에서 Nextcloud 외의 앱도 함께 실행되므로 VM 자원과 앱 제한을 같은 값으로 읽으면 안 된다. [앱 카탈로그의 자원 설정](https://apps.truenas.com/catalog/nextcloud_stable/)\n\n# 상태 API에서 설치 완료와 유지보수 상태를 확인했다\n\n웹 포트가 게시된 것에서 한 단계 더 들어가 `/status.php`에 요청했다. HTTP `200`과 함께 다음 값이 돌아왔다.\n\n```json\n{\n  \"installed\": true,\n  \"maintenance\": false,\n  \"needsDbUpgrade\": false,\n  \"versionstring\": \"35.0.2\"\n}\n```\n\n이 응답으로 설치가 완료된 상태이며 유지보수 모드가 아니고, 앱이 DB 업그레이드를 요구하지 않는다는 점을 확인했다. 파일 업로드·동기화나 복구까지 시험한 결과는 아니다.\n\n[TrueNAS의 디스크와 공유 구성](#post/proxmox-truenas-setup) · [홈서버 글 목록](#post/homelab-things-i-built)\n",
+      "featured": false,
+      "draft": false,
+      "template": false
+    },
+    {
+      "slug": "postgresql-data-services-vm",
+      "title": "PostgreSQL과 데이터 처리 서비스를 한 VM에 모았다",
+      "date": "2026-10-22",
+      "description": "",
+      "tags": [
+        "NAS·서비스",
+        "홈랩",
+        "Proxmox",
+        "PostgreSQL",
+        "데이터 처리"
+      ],
+      "cover": "blue",
+      "image": "",
+      "language": "ko",
+      "translationKey": "postgresql-data-services-vm",
+      "body": "Proxmox의 데이터 처리 VM에는 PostgreSQL과 classifier-api, fetcher, resolver, doc-pipeline을 함께 올렸다. 서비스마다 VM을 하나씩 만든 대신, 데이터베이스와 처리 프로그램을 한 환경에 모았다. 파일과 VM 백업을 보관하는 TrueNAS는 별도 VM으로 두고 있다.\n\n# 데이터 처리 VM에 할당한 자원\n\n2026년 10월 22일의 구성은 2코어, 메모리 6GiB, 시스템 디스크 40G다. 부팅 디스크는 Proxmox의 `local-lvm`에 있으며 `virtio-scsi-single` 컨트롤러를 사용한다.\n\n| 항목 | 설정 |\n| --- | --- |\n| CPU | 1소켓 · 2코어, `cpu: host` |\n| 메모리 | 6144MiB, 즉 6GiB |\n| 머신 · 펌웨어 | `q35` · `OVMF`(UEFI) |\n| 시스템 디스크 | `scsi0`, `local-lvm`, 40G |\n| 디스크 옵션 | `discard=on`, `iothread=1`, `ssd=1` |\n| 네트워크 | VirtIO NIC → `vmbr0`, `firewall=1` |\n\nVM을 따로 둔 덕분에 Proxmox에서 이 환경의 CPU·메모리와 전원 상태를 하나의 단위로 다룰 수 있다. 다만 같은 VM 안의 프로그램은 이 자원을 함께 쓴다. PostgreSQL과 네 서비스 각각에 6GiB씩 할당한 구성이 아니다.\n\n`iothread=1`은 가상 디스크의 I/O를 별도 스레드에서 처리하도록 한 설정이다. 이 옵션과 40G 디스크 크기는 VM의 구성값이며, 데이터베이스 처리량이나 실제 데이터 크기를 나타내지는 않는다. [Proxmox 디스크와 I/O 스레드](https://github.com/proxmox/pve-docs/blob/c673ee6c62ec2bf4e33a05fcd1a0f0a29b18d2f7/qm.adoc#L307-L351)\n\n# Cloud-Init 디스크와 고정 주소 설정\n\n이 VM에는 시스템 디스크와 별도로 Cloud-Init 디스크가 `ide0`에 연결돼 있다. 부팅 순서는 `scsi0;ide2;net0`이며 시스템 디스크가 먼저다. Cloud-Init 디스크를 운영체제 부팅 디스크로 지정한 구성은 아니다.\n\n네트워크 초기 설정인 `ipconfig0`에는 고정 주소와 게이트웨이가 들어 있다. 개발용 VM의 `ip=dhcp`와는 다른 부분이다. 실제 주소를 제외하면 설정의 형태는 아래와 같다.\n\n```text\nboot: order=scsi0;ide2;net0\nide0: local-lvm:<Cloud-Init 볼륨>,media=cdrom\nipconfig0: ip=<고정 주소/CIDR>,gw=<게이트웨이>\nscsi0: local-lvm:<시스템 볼륨>,discard=on,iothread=1,size=40G,ssd=1\n```\n\nCloud-Init 드라이브는 초기 설정을 전달하는 매체이고, `ipconfig0`는 그중 네트워크 설정이다. 위 내용은 Proxmox에 저장된 값이다. 게스트 안에서 현재 쓰는 주소까지 이번 조회로 대조한 것은 아니다. [Cloud-Init 드라이브](https://github.com/proxmox/pve-docs/blob/c673ee6c62ec2bf4e33a05fcd1a0f0a29b18d2f7/qm-cloud-init.adoc#L75-L91), [네트워크 설정 형식](https://github.com/proxmox/pve-docs/blob/c673ee6c62ec2bf4e33a05fcd1a0f0a29b18d2f7/generated/qm-cloud-init-opts.adoc#L37-L49)\n\n# PostgreSQL 옆에 네 서비스를 함께 올렸다\n\n기존 서비스 기록에는 PostgreSQL과 네 처리 프로그램이 함께 남아 있다. 당시 관측 포트는 `5432`, `8010`, `8011`, `8012`, `8013`이다.\n\n| 구분 | 같은 VM에 둔 항목 |\n| --- | --- |\n| 데이터베이스 | PostgreSQL |\n| 처리 프로그램 | classifier-api, fetcher, resolver, doc-pipeline |\n| 당시 관측 포트 | 5432, 8010–8013 |\n\n8010–8013의 개별 서비스 대응 관계와 처리 순서는 이 포트 목록에 남아 있지 않다. PostgreSQL과 네 프로그램을 함께 올린 구성은 있지만, 서비스 이름만으로 데이터가 어떤 순서로 오가며 최종 저장되는지 알 수는 없다. 각 API의 응답과 실제 데이터 저장 결과까지 이어 보는 시험은 별도다.\n\n# 켜진 VM 안으로 들어가려다 만난 게스트 에이전트 상태\n\n자동 시작은 `onboot: 1`, `startup: order=50,up=30`이다. NAS의 `order=10`보다 뒤에 시작하도록 돼 있다. 이 순서는 NAS나 데이터베이스가 준비됐는지를 확인하는 상태 검사가 아니다. [Proxmox 시작 순서](https://github.com/proxmox/pve-docs/blob/c673ee6c62ec2bf4e33a05fcd1a0f0a29b18d2f7/qm.adoc#L1513-L1556)\n\n2026년 10월 22일에는 VM 자체가 실행 중이었다. 설정에는 `agent: 1`도 있었지만 게스트 에이전트를 통한 명령 조회는 아래 오류로 끝났다.\n\n```text\nQEMU guest agent is not running\n```\n\nProxmox에서 에이전트를 사용하도록 설정한 것과 게스트 안에서 에이전트가 응답하는 것은 달랐다. 이 경로로는 내부 서비스 상태와 열린 포트를 다시 읽지 못했다. 따라서 현재 실행 중인 VM이라는 상태와 과거에 올린 PostgreSQL·처리 서비스 목록은 구분해 둔다. SQL 실행과 전체 데이터 처리 흐름은 별도 접속과 기능 시험이 필요한 부분이다.\n\n[홈서버 글 목록으로 돌아가기](#post/homelab-things-i-built)\n",
+      "featured": false,
+      "draft": false,
+      "template": false
+    },
+    {
+      "slug": "proxmox-vm-cpu-memory",
+      "title": "홈서버 VM마다 CPU와 메모리를 다르게 둔 구성",
+      "date": "2026-10-22",
+      "description": "NAS, 개발용 VM, Ubuntu 템플릿을 포함한 VM 열 개의 코어 수, CPU 유형, 메모리 할당량을 비교한다.",
+      "tags": [
+        "서버 설정",
+        "홈랩",
+        "Proxmox",
+        "VM 설정",
+        "CPU",
+        "메모리"
+      ],
+      "cover": "blue",
+      "image": "",
+      "language": "ko",
+      "translationKey": "proxmox-vm-cpu-memory",
+      "body": "내 홈서버의 VM은 모두 같은 크기가 아니다. NAS에는 메모리 24GiB를, 개발용 VM에는 8GiB를 할당해 뒀고, Ubuntu 템플릿은 2GiB다. 서비스 이름뿐 아니라 가상 하드웨어 설정도 서로 다르게 남아 있다.\n\n# VM 10개에 배정한 자원\n\n2026년 10월 22일 기준 CPU·메모리 설정과 전원 상태다. 메모리는 `memory` 값을 MiB에서 GiB로 환산했다. 설정된 크기이므로 현재 사용량을 나타내는 표는 아니다.\n\n| VM | 코어 수 | CPU 유형 | 메모리 | 상태 |\n| --- | --- | --- | --- | --- |\n| NAS | 6 | `host` | 24GiB | 실행 중 |\n| LiteKernel | 4 | `host` | 8GiB | 중지 |\n| 개발용 Hermes | 4 | `x86-64-v2-AES` | 8GiB | 실행 중 |\n| WOL | 2 | `host` | 4GiB | 실행 중 |\n| Home Assistant | 2 | `host` | 4GiB | 중지 |\n| n8n | 2 | `host` | 6GiB | 중지 |\n| 데이터 처리 | 2 | `host` | 6GiB | 실행 중 |\n| MinCrafty | 4 | `host` | 6GiB | 중지 |\n| Linux Mint | 8 | `host` | 16GiB | 중지 |\n| Ubuntu 템플릿 | 2 | `x86-64-v2-AES` | 2GiB | 중지 |\n\n소켓 수는 대부분 `sockets: 1`로 명시돼 있다. Home Assistant에는 소켓 항목이 생략돼 있으며 Proxmox의 기본값도 1이다. 그래서 이 구성에서는 표의 코어 수가 VM의 vCPU 수와 같다. 물리 CPU 코어를 그 수만큼 해당 VM에 전용으로 고정했다는 뜻은 아니다. [CPU·소켓 설정](https://github.com/proxmox/pve-docs/blob/master/generated/qm.conf.5-opts.adoc)\n\nNAS의 자원 설정을 펼치면 아래와 같다.\n\n```text\ncores: 6\nsockets: 1\ncpu: host\nmemory: 24576\nnuma: 0\n```\n\nVM 목록에 남아 있는 모든 메모리 값을 더해 현재 호스트의 사용량으로 볼 수도 없다. 중지된 VM과 템플릿이 포함돼 있고, 실행 중인 VM의 메모리 사용량 역시 할당값과 별개의 관측치다.\n\n# 코어 수와 CPU 유형은 다른 설정이다\n\n대부분은 `cpu: host`지만 개발용 VM과 Ubuntu 템플릿에는 `x86-64-v2-AES`가 들어 있다. 코어 수는 가상 CPU의 개수이고, CPU 유형은 게스트에 보여 주는 CPU 기능과 관련된 설정이다. `host`는 호스트 CPU의 기능을 노출하는 방식이다. [Proxmox CPU 유형 설명](https://github.com/proxmox/pve-docs/blob/master/qm.adoc#cpu-type)\n\n현재 값만으로 내가 서로 다른 유형을 선택했던 이유나 성능 차이까지 알 수는 없다. 개발 VM의 작업 기록에는 처음 메모리가 16GB였다는 내용이 있고 현재는 8GiB로 남아 있지만, 변경 이유와 시점은 기록돼 있지 않다. 자원이 달라졌다는 사실과 변경 의도는 나눠 적었다.\n\n# q35와 펌웨어도 따로 봐야 한다\n\n열 개 VM의 머신 유형은 모두 `q35`다. 펌웨어는 개발용 VM만 `seabios`이고 나머지는 `ovmf`다. 머신 유형과 펌웨어는 별도 항목이며, `q35`라는 값만으로 UEFI 부팅이라고 판단할 수 없다. OVMF는 UEFI 구현이다. [머신 유형과 펌웨어](https://github.com/proxmox/pve-docs/blob/master/qm.adoc#system-settings)\n\n개발용 VM에는 `efidisk0`도 남아 있다. 그런데 실제 `bios` 값은 SeaBIOS다. EFI 디스크가 보인다는 이유만으로 OVMF를 사용한다고 읽으면 이 VM의 설정을 잘못 설명하게 된다.\n\n```text\n개발용 VM\nmachine: q35\nbios: seabios\n\nUbuntu 템플릿\nmachine: q35\nbios: ovmf\n```\n\n# VM 메모리와 앱 메모리를 섞지 않는다\n\nMinCrafty의 6GiB는 VM 전체에 배정한 메모리다. [ATM10](#post/atm10-mincrafty-server)의 Java 최대 힙을 6GiB로 지정했다는 뜻은 아니다. NAS의 24GiB 역시 그 안의 Nextcloud와 Immich에 각각 24GiB씩 배정한 값이 아니다.\n\n내 환경은 `Proxmox의 VM 자원 → 게스트 운영체제 → 앱 또는 게임 프로세스`로 이어진다. 어떤 메모리 값을 보고 있는지 먼저 구분해야 VM 설정과 앱 실행 옵션을 비교할 수 있다.\n\n[VM 디스크 연결과 옵션](#post/proxmox-vm-disks) · [홈서버 글 목록](#post/homelab-things-i-built)\n",
+      "featured": true,
+      "draft": false,
+      "template": false
+    },
+    {
+      "slug": "proxmox-vm-disks",
+      "title": "Proxmox VM 디스크, local-lvm과 VirtIO SCSI 설정",
+      "date": "2026-10-22",
+      "description": "",
+      "tags": [
+        "서버 설정",
+        "홈랩",
+        "Proxmox",
+        "VM 설정",
+        "스토리지",
+        "백업"
+      ],
+      "cover": "blue",
+      "image": "",
+      "language": "ko",
+      "translationKey": "proxmox-vm-disks",
+      "body": "홈서버 VM의 시스템 디스크는 모두 `local-lvm`에 있다. 그중 Home Assistant는 SATA로, 나머지는 SCSI로 연결돼 있다. NAS에는 이 시스템 디스크 외에 물리 HDD 세 개를 추가로 붙였다. 같은 디스크 목록 안에서도 부팅 공간과 데이터 공간의 역할이 다르다.\n\n# 시스템 디스크와 컨트롤러를 함께 본다\n\n2026년 10월 22일의 구성이다. 크기는 Proxmox 설정의 `size` 표기이며, 사용 중인 파일의 용량은 아니다.\n\n| VM | 시스템 디스크 | 크기 | SCSI 컨트롤러 |\n| --- | --- | --- | --- |\n| NAS | `scsi0` | 64G | `virtio-scsi-single` |\n| LiteKernel | `scsi0` | 72G | `virtio-scsi-pci` |\n| 개발용 Hermes | `scsi0` | 80G | `virtio-scsi-single` |\n| WOL | `scsi0` | 35G | `virtio-scsi-single` |\n| Home Assistant | `sata0` | 32G | `virtio-scsi-pci`, 시스템 디스크는 SATA |\n| n8n | `scsi0` | 60G | `virtio-scsi-single` |\n| 데이터 처리 | `scsi0` | 40G | `virtio-scsi-single` |\n| MinCrafty | `scsi0` | 80G | `virtio-scsi-single` |\n| Linux Mint | `scsi0` | 50G | `virtio-scsi-pci` |\n| Ubuntu 템플릿 | `scsi0` | 10G | `virtio-scsi-single` |\n\nHome Assistant에도 `scsihw` 값은 있다. 하지만 시스템 디스크가 연결된 항목은 `sata0`이므로, 컨트롤러 이름만 보고 SCSI 부팅 디스크라고 설명하면 틀린다. 실제 장치 항목과 컨트롤러를 함께 봐야 하는 사례다.\n\n# 세 가지 옵션을 같이 둔 디스크\n\nNAS·개발·WOL·n8n·데이터 처리·MinCrafty·템플릿의 시스템 디스크에는 `discard=on,iothread=1,ssd=1`이 들어 있다. 데이터 처리 VM의 경우다.\n\n```text\nscsihw: virtio-scsi-single\nscsi0: local-lvm:<시스템 볼륨>,discard=on,iothread=1,size=40G,ssd=1\n```\n\n| 옵션 | 제어하는 내용 |\n| --- | --- |\n| `discard=on` | 게스트의 discard 요청을 하위 저장소로 전달 |\n| `iothread=1` | 디스크 I/O를 별도 스레드로 처리 |\n| `ssd=1` | 게스트에 SSD 장치 특성을 표시 |\n\n세 값은 각각 다른 역할을 맡는다. SSD 표시를 켠다고 물리 HDD가 SSD가 되거나, discard만으로 모든 빈 공간이 즉시 회수되는 것은 아니다. I/O 스레드 설정도 실제 속도 측정과는 구분된다. [Proxmox 디스크 옵션](https://github.com/proxmox/pve-docs/blob/master/qm.adoc#hard-disk)\n\n모든 VM에 세 옵션을 일괄 적용한 구성은 아니다. Home Assistant와 Linux Mint에는 discard와 SSD 표시가 있지만 I/O 스레드 항목은 없다. LiteKernel의 시스템 디스크에는 세 옵션이 명시돼 있지 않다. 이 차이를 성능 문제로 단정하거나 과거 튜닝 결과로 꾸미지는 않았다.\n\n# NAS의 물리 디스크는 VM 백업에서 빠진다\n\nNAS의 추가 디스크 세 개는 `local-lvm` 볼륨이 아니라 `/dev/disk/by-id/` 경로로 연결한 물리 디스크다. 4TB 두 개와 2TB 한 개이며 모두 `backup=0`이다.\n\n```text\nscsi1: /dev/disk/by-id/<4TB 디스크 A>,backup=0\nscsi2: /dev/disk/by-id/<4TB 디스크 B>,backup=0\nscsi3: /dev/disk/by-id/<2TB 디스크>,backup=0\n```\n\n`backup=0`은 해당 디스크를 VM 백업에 포함하지 않는 설정이다. NAS VM의 백업이 있어도 이 세 디스크의 파일까지 복사됐다는 뜻은 아니다. 실제 풀·공유·백업 연결은 [TrueNAS 구성 글](#post/proxmox-truenas-setup)에 이어 썼다. [디스크별 백업 옵션](https://github.com/proxmox/pve-docs/blob/master/generated/qm.conf.5-opts.adoc)\n\n# CD-ROM이 모두 설치 ISO는 아니다\n\n개발·n8n·데이터 처리·Ubuntu 템플릿에는 `ide0`에 Cloud-Init 매체가 있다. 일부 VM의 `ide2`에도 CD-ROM이 있지만 이 둘의 용도는 다르다. `media=cdrom` 표기만으로 같은 설치 이미지를 연결했다고 보면 안 된다.\n\nCloud-Init 매체는 초기 설정을 전달하는 역할이고 운영체제는 별도의 시스템 디스크에 있다. [네트워크·Cloud-Init 글](#post/proxmox-vm-network-cloud-init)에서는 이 매체와 주소 설정을 연결해 설명했다.\n\n[홈서버 글 목록](#post/homelab-things-i-built)\n",
+      "featured": false,
+      "draft": false,
+      "template": false
+    },
+    {
+      "slug": "proxmox-vm-network-cloud-init",
+      "title": "VM 네트워크를 vmbr0에 연결하고 Cloud-Init 주소를 나눴다",
+      "date": "2026-10-22",
+      "description": "",
+      "tags": [
+        "서버 설정",
+        "홈랩",
+        "Proxmox",
+        "VM 설정",
+        "네트워크",
+        "Cloud-Init"
+      ],
+      "cover": "green",
+      "image": "",
+      "language": "ko",
+      "translationKey": "proxmox-vm-network-cloud-init",
+      "body": "내 홈서버의 VM 열 개는 VirtIO 네트워크 인터페이스를 통해 같은 `vmbr0`에 연결돼 있다. 반면 IP 주소를 전달하는 Cloud-Init 설정은 VM마다 다르다. 개발용 VM은 DHCP를, n8n과 데이터 처리 VM은 고정 주소를 사용하도록 설정돼 있다.\n\n# vmbr0는 연결 위치, IP는 별도 설정\n\n2026년 10월 22일 기준으로 열 개 VM의 `net0`에 공통으로 들어 있는 값은 아래 세 가지다.\n\n| 항목 | 값 |\n| --- | --- |\n| 네트워크 장치 모델 | `virtio` |\n| 연결 브리지 | `vmbr0` |\n| VM NIC의 방화벽 옵션 | `firewall=1` |\n\nVirtIO는 게스트에 보여 주는 네트워크 장치의 종류이고, `vmbr0`는 그 인터페이스가 연결되는 호스트의 브리지다. 내 NAS 구성에서는 이 브리지가 물리 인터페이스와도 연결돼 있다. VM마다 브리지를 하나씩 만든 형태가 아니다. [Proxmox 네트워크 장치 설명](https://github.com/proxmox/pve-docs/blob/master/qm.adoc#network-device)\n\n이 공통 설정만으로 각 VM의 주소를 알 수는 없다. 같은 브리지에 연결된 VM도 주소를 받는 방식은 다를 수 있고, `firewall=1` 하나만으로 어떤 포트가 허용되는지도 정해지지 않는다. 이번 비교에서 VM NIC에 명시된 VLAN 태그는 없었다.\n\n# Cloud-Init 매체가 연결된 VM 네 개\n\n초기 설정을 전달하는 Cloud-Init 매체는 개발·n8n·데이터 처리·Ubuntu 템플릿의 `ide0`에 있다. 저장 위치는 `local-lvm`이고 매체 형식은 CD-ROM이다.\n\n| VM | Cloud-Init 매체 | `ipconfig0` |\n| --- | --- | --- |\n| 개발용 Hermes | `ide0` | `ip=dhcp` |\n| n8n | `ide0` | 고정 주소·게이트웨이 지정 |\n| 데이터 처리 | `ide0` | 고정 주소·게이트웨이 지정 |\n| Ubuntu 템플릿 | `ide0` | 명시된 항목 없음 |\n\n이 드라이브는 운영체제를 담은 `scsi0`와 별개다. 시스템 디스크로 부팅하면서 Cloud-Init 매체로 초기 설정을 전달하는 구성이다. [Proxmox Cloud-Init 설명](https://github.com/proxmox/pve-docs/blob/master/qm-cloud-init.adoc)\n\n같은 `ide0` 매체를 사용한다고 네 VM이 모두 같은 방식으로 주소를 받는 것은 아니다. 매체 연결과 그 안에 전달할 네트워크 설정을 나눠 봐야 한다.\n\n# DHCP와 고정 주소를 다른 값으로 남겼다\n\n개발용 VM에는 다음 값이 들어 있고 명시적인 게이트웨이 값은 없다.\n\n```text\nipconfig0: ip=dhcp\n```\n\nn8n과 데이터 처리 VM에는 주소와 게이트웨이가 모두 있다. 아래는 실제 값 대신 역할을 표시한 설정 형태다.\n\n```text\nipconfig0: ip=<고정 주소/CIDR>,gw=<게이트웨이>\n```\n\n템플릿에는 `ipconfig0` 항목이 없다. Proxmox 문서상 Cloud-Init이 활성화돼 있고 IPv4·IPv6 주소를 모두 지정하지 않으면 IPv4 DHCP가 기본값이다. 항목 생략을 곧바로 네트워크 미설정으로 해석하지 않는 이유다. [Cloud-Init IP 옵션](https://github.com/proxmox/pve-docs/blob/master/generated/qm.conf.5-opts.adoc)\n\n여기서 비교한 것은 Proxmox에 저장된 값이다. 게스트 안에서 현재 적용된 주소와 일치하는지, DHCP 임대가 유지되는지는 별도 확인 대상이다. 특히 n8n은 현재 중지 상태라 저장된 설정과 실행 중인 네트워크를 구분해야 한다.\n\n# Tailscale 접속은 그 위에 놓인 통로다\n\n개발용 VM에는 DHCP 설정이 있으면서 Tailscale 접속 경로도 있다. 내부 네트워크 인터페이스와 Tailscale 주소가 서로를 대신하는 하나의 설정은 아니다.\n\n현재 직접 SSH 연결을 확인한 경로는 [Tailscale·SSH 글](#post/tailscale-ssh-homelab)에 따로 적었다. 여기서는 VM이 어느 브리지에 붙는지, 초기 주소 설정을 어떻게 전달하는지를 다룬다. VM의 연결 설정과 실제 원격 접속 결과를 이어 보면 어느 단계까지 동작했는지 구분할 수 있다.\n\n[Ubuntu 템플릿의 구성](#post/ubuntu-vm-template) · [홈서버 글 목록](#post/homelab-things-i-built)\n",
+      "featured": false,
+      "draft": false,
+      "template": false
+    },
+    {
+      "slug": "proxmox-vm-startup-order",
+      "title": "NAS부터 시작하도록 둔 VM 부팅 순서",
+      "date": "2026-10-22",
+      "description": "",
+      "tags": [
+        "서버 설정",
+        "홈랩",
+        "Proxmox",
+        "VM 설정",
+        "자동 시작",
+        "게스트 에이전트"
+      ],
+      "cover": "peach",
+      "image": "",
+      "language": "ko",
+      "translationKey": "proxmox-vm-startup-order",
+      "body": "내 홈서버는 NAS를 먼저 시작하도록 순서를 정해 뒀다. NAS는 `order=10`, WOL은 40, Home Assistant와 데이터 처리 VM은 50이다. 다만 순서가 있는 VM이 모두 자동으로 켜지는 것은 아니다. MinCrafty에는 80이라는 시작 순서가 있지만 자동 시작 옵션은 활성화돼 있지 않다.\n\n# 자동 시작 여부와 순서를 따로 저장한다\n\n2026년 10월 22일의 설정이다. `onboot`는 호스트 부팅 시 시작 여부를 정하는 옵션이고, `startup`에는 순서와 대기 시간이 들어 있다.\n\n| VM | `onboot` | 시작 설정 | 현재 상태 |\n| --- | --- | --- | --- |\n| NAS | `1` | `order=10,up=10` | 실행 중 |\n| WOL | `1` | `order=40,up=30` | 실행 중 |\n| Home Assistant | `1` | `order=50,up=30` | 중지 |\n| 데이터 처리 | `1` | `order=50,up=30` | 실행 중 |\n| n8n | `1` | `order=70,up=30` | 중지 |\n| MinCrafty | 항목 없음 | `order=80,up=30,down=10` | 중지 |\n\nLiteKernel·개발용 VM·Linux Mint·Ubuntu 템플릿에는 `onboot`와 `startup`이 모두 명시돼 있지 않다. `onboot`의 기본값은 0이다. 따라서 개발 VM이 지금 실행 중이어도 호스트 부팅 때 자동 시작하는 설정이라고 볼 수는 없다. [onboot 옵션](https://github.com/proxmox/pve-docs/blob/master/generated/qm.conf.5-opts.adoc)\n\n반대 사례도 있다. Home Assistant와 n8n은 자동 시작이 켜져 있지만 현재는 중지 상태다. 자동 시작 설정은 다음 호스트 부팅 때의 동작을 정하며, 현재 전원 상태와는 다른 정보다.\n\n# up은 기다리는 시간이며 서비스 준비 확인은 아니다\n\nNAS 설정은 아래처럼 짧다.\n\n```text\nonboot: 1\nstartup: order=10,up=10\n```\n\n자동 시작 대상 중 낮은 순서값을 가진 NAS가 먼저 시작하고, `up=10`만큼 다음 VM 시작 전에 기다린다. 그다음은 WOL, 50번 그룹, n8n 순서다. Home Assistant와 데이터 VM은 같은 50이므로 이 표만으로 두 VM의 선후 관계까지 정하지 않는다.\n\n`up`은 시간 지연이다. NAS의 SMB 공유나 데이터베이스가 준비됐다는 응답을 기다리는 검사는 아니다. 자동 시작 순서를 구성한 것과 재부팅 뒤 모든 앱의 정상 동작을 시험한 것은 구분해야 한다. [VM 시작·종료 순서](https://github.com/proxmox/pve-docs/blob/master/qm.adoc#automatic-start-and-shutdown-of-virtual-machines)\n\nMinCrafty의 `down=10`은 종료 대기 제한이다. 다음 VM을 시작하기 전 10초를 기다린다는 뜻도, 게임 월드 저장이 끝났다는 보장도 아니다. 이 VM에는 시작 순서만 남아 있으므로 자동 시작 여부를 함께 봐야 한다.\n\n# VM 내부의 부팅 대상은 또 다른 순서다\n\n`startup`이 VM 사이의 순서를 다룬다면 `boot`는 VM 안에서 어떤 장치로 부팅할지 정한다.\n\n| VM | `boot` 설정 |\n| --- | --- |\n| 개발용 VM·Ubuntu 템플릿 | `order=scsi0` |\n| Home Assistant | `order=sata0` |\n| LiteKernel·WOL·n8n·데이터·MinCrafty·Linux Mint | `order=scsi0;ide2;net0` |\n| NAS | 특정 `order` 값이 명시돼 있지 않음 |\n\n그래서 `order=50`과 `order=scsi0`는 서로 다른 항목에 속한 값이다. 전자는 다른 VM과의 시작 순서, 후자는 해당 VM의 부팅 장치다. NAS의 자동 시작 순서는 분명히 10이지만, 비어 있는 `boot` 값에서 디스크 우선순위를 추정하지는 않았다.\n\n# 게스트 에이전트 옵션도 응답 여부와 구분한다\n\nVM 열 개에는 QEMU 게스트 에이전트 사용 옵션이 `agent: 1` 또는 `agent: enabled=1`로 들어 있다. 하지만 데이터 처리 VM에서 게스트 명령을 조회했을 때는 아래 오류가 돌아왔다.\n\n```text\nQEMU guest agent is not running\n```\n\n같은 호스트의 NAS에서는 게스트 에이전트를 통해 OS 정보와 앱 상태를 읽을 수 있었다. 옵션이 켜졌다는 사실만으로 게스트 안의 에이전트가 모두 응답하는 것은 아니었다. 데이터 처리 VM도 전원은 켜져 있었으므로, 전원·에이전트·앱 상태를 각각 봐야 했다.\n\n[데이터 처리 VM의 상태](#post/postgresql-data-services-vm) · [홈서버 글 목록](#post/homelab-things-i-built)\n",
+      "featured": false,
+      "draft": false,
+      "template": false
+    },
+    {
+      "slug": "tailscale-ssh-homelab",
+      "title": "Tailscale과 SSH로 홈서버에 접속하기",
+      "date": "2026-10-22",
+      "description": "",
+      "tags": [
+        "자동화·접속",
+        "홈랩",
+        "Tailscale",
+        "SSH",
+        "Proxmox"
+      ],
+      "cover": "blue",
+      "image": "",
+      "language": "ko",
+      "translationKey": "tailscale-ssh-homelab",
+      "body": "홈서버에서 개발용 VM을 만들 때 SSH 공개키를 먼저 등록하고 Tailscale도 설치했다. 다만 설치 직후부터 Tailscale로 접속할 수 있었던 것은 아니다. 2026년 5월 26일의 최초 구성에서는 Tailscale 1.98.3이 설치돼 있었지만 인증 전이었고, `tailscaled`도 `disabled` / `inactive` 상태였다.\n\n이때는 Ubuntu 24.04.4 VM을 Proxmox의 `vmbr0`에 연결하고 DHCP로 내부 주소를 받았다. 작업용 Mac의 공개키를 VM 사용자 계정에 등록해 둔 상태에서, Tailscale 로그인은 따로 마무리할 항목으로 남겼다. 패키지가 설치됐다는 것과 그 주소로 실제 접속할 수 있다는 것은 이 과정에서 나뉘었다.\n\n# VM으로 바로 들어가는 경로와 호스트를 거치는 경로\n\n5월 27일의 접속 문서에는 두 경로를 남겼다. 하나는 VM의 Tailscale 주소로 바로 접속하는 방식이고, 다른 하나는 Proxmox 호스트를 점프 호스트로 거쳐 VM의 내부 주소에 접속하는 방식이다.\n\n```text\n직접 접속\n작업용 컴퓨터 → Tailscale → 개발용 VM의 SSH\n\n점프 호스트 경유\n작업용 컴퓨터 → Tailscale → Proxmox 호스트 → 개발용 VM의 SSH\n```\n\n접속 명령은 직접 경로의 `ssh 사용자@대상주소`와 점프 경로의 `ssh -J 중간호스트사용자@중간주소 대상사용자@내부주소` 형태다. 직접 경로는 VM이 목적지고, 점프 경로는 Proxmox에서 VM까지 이어지는 구간이 하나 더 생긴다.\n\n여기서 사용한 것은 Tailscale 주소를 경유하는 일반 SSH다. 처음 등록한 SSH 공개키와 VM의 SSH 서비스를 사용하는 접속 경로이며, Tailscale SSH 기능의 정책을 별도로 설정하고 시험했다는 기록은 없다.\n\n2026년 10월 22일에는 Tailscale 주소로 Proxmox 호스트와 개발용 VM에 각각 직접 SSH 접속했다. 기존 SSH 인증과 호스트 키만 사용하도록 `BatchMode=yes`, `StrictHostKeyChecking=yes`를 적용한 연결이었다. 추가 인증 입력이나 새 호스트 키 등록 없이 접속이 완료됐다. 점프 호스트 경로는 문서에 남아 있지만 이날 별도로 실행 시험하지는 않았다.\n\n# 접속한 뒤 데몬과 SSH를 각각 확인했다\n\nVM 안에서는 아래 두 명령으로 데몬과 SSH의 상태를 각각 읽었다.\n\n```sh\nsystemctl is-active tailscaled\nsystemctl is-active ssh\n```\n\n두 출력은 모두 `active`였다. 처음 설치했을 때 비활성이던 Tailscale 데몬이 이 시점에는 실행 중이었고, 실제 SSH 연결도 성공한 상태다. 초기 미인증 상태에서 사용한 인증 명령과 적용 시점은 기록에 남아 있지 않다.\n\n이번 접속은 별도 외부 회선이나 다른 장소에서 수행한 시험은 아니다. 여러 VM이 Tailnet에 연결됐던 과거 기록도 있지만, 이 결과로 현재 모든 VM에 접속된다고 볼 수는 없다. 여기서 직접 확인한 것은 Proxmox 호스트와 개발용 VM으로 들어가는 경로다.\n\n# 접속이 되는 VM과 프로그램이 실행 중인 VM\n\n5월에는 개발용 VM의 에이전트 관련 프로그램과 작업물을 정리하면서 Tailscale과 SSH를 남겼다. 10월에도 이 통로로 들어가 VM 내부 상태를 볼 수 있었다. VM에서 무엇을 실행하는지 바뀌어도 다시 작업할 접속 경로는 유지된 셈이다.\n\n접속 성공 뒤에는 Hermes가 실제로 남아 있는지 따로 살폈다.\n\n```sh\ncommand -v hermes\nsystemctl --user show hermes-gateway.service \\\n  -p LoadState -p ActiveState -p UnitFileState\n```\n\n`command -v hermes`는 실행 경로를 반환하지 않았다. 사용자 서비스는 `LoadState=not-found`, `ActiveState=inactive`였고 `UnitFileState`는 비어 있었다. SSH는 동작하지만 현재 사용자의 PATH에 Hermes 명령이 없고, 해당 gateway 서비스도 등록돼 있지 않은 상태였다.\n\n[Tailscale의 연결 진단 문서](https://tailscale.com/docs/reference/troubleshooting/network-configuration/tcp-connection-two-devices)도 데몬 사이 통신과 호스트의 TCP 연결을 구분한다. 내 환경에서는 데몬 상태, 실제 SSH 연결, VM 안의 프로그램 상태가 각각 다른 답을 줬다. 서버에 들어갈 수 있다는 사실만으로 설치했던 서비스가 지금도 실행 중이라고 판단하지 않게 된 이유다.\n\n개발용 VM의 도구 설치와 메시지 처리 과정은 [온라인인 Discord 봇이 답하지 않던 이유](#post/hermes-development-vm)에 따로 적었다.\n\n[홈서버 글 목록으로 돌아가기](#post/homelab-things-i-built)\n",
+      "featured": false,
+      "draft": false,
+      "template": false
+    },
+    {
+      "slug": "ubuntu-vm-template",
+      "title": "새 VM의 바탕으로 남겨 둔 Ubuntu 템플릿",
+      "date": "2026-10-22",
+      "description": "",
+      "tags": [
+        "서버 설정",
+        "홈랩",
+        "Proxmox",
+        "Ubuntu",
+        "가상머신"
+      ],
+      "cover": "blue",
+      "image": "",
+      "language": "ko",
+      "translationKey": "ubuntu-vm-template",
+      "body": "Proxmox 홈서버에 Ubuntu 24.04용 VM 템플릿을 남겨 뒀다. 10G 시스템 디스크에 Cloud-Init 드라이브를 붙이고 `template: 1`로 표시한 구성이다. 실행할 서비스를 담은 VM 옆에, 새 환경의 바탕으로 사용할 항목을 따로 마련했다.\n\n# 템플릿에는 작은 기본 자원만 남겼다\n\n2026년 10월 22일 기준으로 템플릿에는 CPU 2코어와 메모리 2048MiB가 할당돼 있다. 같은 서버의 NAS가 24GiB, 데이터 처리 VM이 6GiB인 것과 비교하면 이쪽은 기본 환경을 담는 작은 구성이다.\n\n| 항목 | 설정 |\n| --- | --- |\n| 템플릿 표시 | `template: 1` |\n| CPU | 1소켓 · 2코어, `x86-64-v2-AES` |\n| 메모리 | 2048MiB, 즉 2GiB |\n| 머신 · 펌웨어 | `q35` · `OVMF`(UEFI) |\n| 시스템 디스크 | `scsi0`, `local-lvm`, 10G |\n| SCSI 컨트롤러 | `virtio-scsi-single` |\n| 네트워크 | VirtIO NIC → `vmbr0`, `firewall=1` |\n\n시스템 디스크에는 `discard=on,iothread=1,ssd=1`이 들어 있다. NAS·데이터 처리 VM의 시스템 디스크에서도 사용하는 옵션이다. 다만 같은 디스크 옵션을 쓴다는 사실만으로 어느 VM이 이 템플릿에서 복제됐는지 알 수는 없다.\n\n# Cloud-Init은 ide0, 부팅은 scsi0\n\n이 템플릿에는 시스템 디스크와 별개의 Cloud-Init 드라이브가 있다. 연결 위치는 `ide0`이며 CD-ROM 매체로 표시된다. 실제 부팅 순서는 `scsi0`만 가리킨다.\n\n```text\nboot: order=scsi0\nide0: local-lvm:<Cloud-Init 볼륨>,media=cdrom\nscsi0: local-lvm:<템플릿 시스템 볼륨>,discard=on,iothread=1,size=10G,ssd=1\nscsihw: virtio-scsi-single\ntemplate: 1\n```\n\n역할은 둘로 나뉜다. `scsi0`에는 운영체제 디스크가 있고, Cloud-Init 드라이브는 새 환경에 전달할 초기 설정을 담는 매체다. Cloud-Init 드라이브를 붙였다고 운영체제 부팅 대상을 그 드라이브로 바꾸는 것은 아니다. [Proxmox의 Cloud-Init 드라이브와 부팅 설정](https://github.com/proxmox/pve-docs/blob/c673ee6c62ec2bf4e33a05fcd1a0f0a29b18d2f7/qm-cloud-init.adoc#L75-L91)\n\n문서의 예제에서는 Cloud-Init 드라이브가 `ide2`에 있지만, 내 템플릿에서는 `ide0`에 있다. IDE 장치는 0부터 3까지 설정할 수 있다. 예제의 슬롯 번호만 찾으면 실제로 연결된 드라이브를 놓칠 수 있는 부분이다. [IDE 장치 설정 범위](https://github.com/proxmox/pve-docs/blob/c673ee6c62ec2bf4e33a05fcd1a0f0a29b18d2f7/generated/qm.conf.5-opts.adoc#L331-L333)\n\n# 실제 서비스 VM에서는 주소와 디스크 크기가 달라진다\n\n같은 서버에서 Cloud-Init 드라이브를 사용하는 개발용 VM과 데이터 처리 VM도 함께 비교했다.\n\n| 항목 | Ubuntu 템플릿 | 개발용 VM | 데이터 처리 VM |\n| --- | --- | --- | --- |\n| Cloud-Init 드라이브 | `ide0` | `ide0` | `ide0` |\n| 시스템 디스크 | 10G | 80G | 40G |\n| 메모리 | 2GiB | 8GiB | 6GiB |\n| `ipconfig0` | 명시된 항목 없음 | `ip=dhcp` | 고정 주소·게이트웨이 지정 |\n\n개발용 VM에는 DHCP 설정이, 데이터 처리 VM에는 고정 주소와 게이트웨이가 들어 있다. 템플릿에는 `ipconfig0` 항목이 명시돼 있지 않다. Proxmox 문서에서는 Cloud-Init이 활성화되고 IPv4·IPv6 주소를 모두 지정하지 않으면 IPv4 DHCP를 기본값으로 사용한다고 설명한다. 따라서 항목이 없다는 사실을 네트워크 설정 자체가 없다는 뜻으로 읽으면 안 된다. 실제 게스트에 적용된 주소는 별도로 확인하지 않았다. [Cloud-Init 네트워크 옵션](https://github.com/proxmox/pve-docs/blob/master/generated/qm-cloud-init-opts.adoc)\n\n이 표는 현재 구성의 비교다. 두 서비스 VM을 이 템플릿에서 복제했다는 이력이나 디스크 확장 명령의 실행 기록은 없어, 디스크 크기의 차이만으로 생성 순서를 알 수는 없다. 실제로 개발용 VM에 접속하고 도구를 설치한 과정은 [개발용 VM 글](#post/hermes-development-vm)에 따로 적었다.\n\n# 중지 상태가 이 항목의 역할과 맞는다\n\n템플릿은 목록에서 `stopped`로 보인다. NAS처럼 켜져 있어야 파일을 제공하는 항목과 달리, 복제할 바탕을 보관하는 항목이므로 같은 기준으로 실행 상태를 판단할 수 없다. Proxmox 문서에서도 준비한 이미지를 템플릿으로 만들고 복제하는 흐름을 설명한다. [템플릿과 Cloud-Init](https://github.com/proxmox/pve-docs/blob/2e161a79bbcce5e8d99816564ac54c7438abcdaf/qm-cloud-init.adoc#L8-L26)\n\n현재 마련해 둔 것은 시스템 디스크, Cloud-Init 매체, 가상 하드웨어를 묶은 기반이다. SSH 키와 Tailscale 인증, 애플리케이션 설치까지 자동으로 끝나는 환경으로 시험한 것은 아니다. 새 서비스 VM으로 사용할 때 달라지는 주소·자원·접속 설정은 템플릿 바깥의 작업으로 남는다.\n\n[홈서버 글 목록으로 돌아가기](#post/homelab-things-i-built)\n",
+      "featured": false,
+      "draft": false,
+      "template": false
+    },
+    {
+      "slug": "proxmox-truenas-setup",
+      "title": "Proxmox에 올린 TrueNAS, 실제 디스크와 공유 구성",
+      "date": "2026-10-18",
+      "description": "TrueNAS의 부팅 디스크부터 ZFS 풀과 SMB 공유까지 이어지는 구성과 VM 백업에서 빠지는 디스크를 설명한다.",
+      "tags": [
+        "NAS·서비스",
+        "Proxmox",
+        "TrueNAS",
+        "홈랩",
+        "ZFS",
+        "NAS"
+      ],
+      "cover": "blue",
+      "image": "",
+      "language": "ko",
+      "translationKey": "proxmox-truenas-setup",
+      "body": "홈랩에서 Proxmox에 TrueNAS를 VM으로 올려 쓰고 있다. 한 서버 안에서 가상머신과 NAS가 함께 돌아가다 보니, 어떤 공간에 무엇을 두느냐에 따라 부팅과 백업의 의존 관계도 달라진다.\n\n사용 중인 버전은 **Proxmox VE 9.2.11과 TrueNAS 25.10.5**다. 아래는 2026년 10월 18일 기준의 구성이다.\n\n# TrueNAS가 먼저 켜질 수 있게\n\nTrueNAS의 부팅·EFI 디스크는 호스트 NVMe의 `local-lvm`에 있다. LVM-thin 볼륨으로 부팅 공간을 로컬에 두면, NAS를 켜기 위해 NAS 공유부터 열어야 하는 상황을 피할 수 있다.\n\n| 항목 | 설정 |\n| --- | --- |\n| CPU | 1소켓 · 6코어, `cpu: host` |\n| 메모리 | `24576 MiB` = 24 GiB |\n| 머신 · 펌웨어 | `q35` · `OVMF`(UEFI) |\n| 부팅 디스크 | `local-lvm`, 64 GiB |\n| EFI 디스크 | 같은 `local-lvm`, 4 MiB |\n| 디스크 컨트롤러 | `virtio-scsi-single` |\n| 게스트 에이전트 | `agent: 1`, 활성화 |\n\n자동 시작은 `onboot: 1`, 시작 순서와 간격은 `order=10,up=10`이다. 이 VM을 시작하고 다음 VM까지 10초를 기다리지만, SMB가 준비됐는지 확인하는 과정은 아니다. 재부팅 후 공유가 열리는 시점은 별도 확인이 필요하다. [시작 순서와 간격](https://github.com/proxmox/pve-docs/blob/master/qm.adoc#automatic-start-and-shutdown-of-virtual-machines)\n\nVirtIO NIC는 호스트의 물리 인터페이스와 연결된 `vmbr0`를 사용한다. `firewall=1`도 켜져 있지만 실제 허용 범위는 방화벽 규칙에 달려 있다.\n\n부팅 볼륨을 호스트 쪽에서 따라가면 64G LVM 볼륨, LVM-thin 풀, NVMe 파티션, 물리 NVMe 순서로 이어진다. TrueNAS의 EFI 디스크도 이 로컬 저장소에 있다. 아래의 데이터용 HDD 세 개와 운영체제를 담는 저장 공간이 서로 분리돼 있는 셈이다.\n\n```text\nTrueNAS 부팅\n호스트 NVMe → local-lvm → 64G 시스템 디스크 + EFI 디스크\n\nNAS 파일\n물리 HDD → QEMU SCSI 장치 → TrueNAS의 ZFS 풀 → 데이터셋 → SMB 공유\n```\n\n이 두 경로를 따로 보면 장애가 난 위치에 따라 확인할 곳도 달라진다. VM 자체가 부팅하지 않는다면 로컬 부팅 볼륨과 VM 설정이 먼저이고, 부팅 뒤 특정 공유만 열리지 않는다면 ZFS 풀·데이터셋·SMB 쪽으로 범위가 좁아진다. 실제 장애를 재현한 결과가 아니라 이 구성의 연결 관계다.\n\n# 운영체제 밖에 두는 데이터\n\n파일을 담는 공간은 호스트의 물리 디스크를 `by-id`로 연결한다. 아래 설정의 꺾쇠 부분만 장비 식별자를 바꾼 것이다.\n\n```text\nscsi0: local-lvm:<부팅 볼륨>,discard=on,iothread=1,size=64G,ssd=1\nscsi1: /dev/disk/by-id/<4TB 디스크 A>,backup=0,size=3907018584K\nscsi2: /dev/disk/by-id/<4TB 디스크 B>,backup=0,size=3907018584K\nscsi3: /dev/disk/by-id/<2TB 디스크>,backup=0,size=1953514584K\n```\n\n부팅 디스크 `scsi0`에만 discard 전달·별도 I/O 스레드·SSD 표시 옵션이 명시돼 있다. 데이터 디스크의 `backup=0`은 뒤의 백업 구성과 이어진다.\n\nTrueNAS는 이 물리 디스크에 QEMU의 가상 SCSI로 접근하므로 모델명이 `QEMU HARDDISK`로 보인다. `hostpci` 항목은 없는 구성으로, HBA 전체를 넘기는 PCI 패스스루와는 다르다. [디스크 연결 방식](https://github.com/proxmox/pve-docs/blob/master/qm.adoc#hard-disk)\n\n그 위에서 파일을 관리하는 풀은 다음 두 개다.\n\n| 풀 | 연결한 디스크 | 상태 |\n| --- | --- | --- |\n| `tank` | 4TB × 2, 미러 vdev 1개 | `ONLINE` |\n| `nc_pool` | 2TB × 1, 단일 디스크 vdev | `ONLINE` |\n\n`tank`는 용량을 합치는 대신 같은 데이터를 양쪽에 둬 한 장의 고장에 대비한다. 삭제도 함께 반영되므로 파일을 되찾을 백업은 따로 필요하다. `nc_pool`에는 중복성이 없다. 4TB·2TB가 약 3.6TiB·1.8TiB로 보이는 것은 단위 차이다. 실제 남은 공간은 풀의 사용량에 따라 달라진다. [풀 구성](https://www.truenas.com/docs/scale/25.10/scaletutorials/storage/createpoolwizard/)\n\n물리 디스크 연결과 별개로 가상화의 제약도 남는다. [TrueNAS 공식 안내](https://www.truenas.com/docs/scale/25.10/gettingstarted/scalehardwareguide/#virtualized-truenas)는 중요 데이터를 다루는 일반 운영에 가상화를 권장하지 않으며 가상 디스크 기반 풀에도 주의를 요구한다.\n\nTrueNAS 안에서는 부팅용 `boot-pool`도 `ONLINE`이었다. 따라서 운영체제의 풀, 미러로 만든 파일 저장 풀, 단일 디스크 풀을 따로 볼 수 있다. `ONLINE`은 당시 풀 상태이며, 파일을 지우고 되살리는 복구 시험 결과는 아니다.\n\n# 같은 풀에서 나누는 공유와 권한\n\n일반 파일과 Proxmox 백업은 모두 `tank`에 둔다. 대신 데이터셋과 SMB 공유를 나눠 같은 풀 안에서도 경로와 권한을 따로 관리한다.\n\n| SMB 공유 | 연결한 경로 | 데이터셋 ACL 모드 |\n| --- | --- | --- |\n| `share` | `/mnt/tank/share` | `RESTRICTED` |\n| `pve-backup` | `/mnt/tank/pve-backup` | `PASSTHROUGH` |\n\n두 데이터셋은 `NFSv4` ACL을 사용한다. 압축은 `LZ4`, 레코드 크기는 `128K`, 동기 쓰기 정책은 `STANDARD`이며 접근 시각 갱신과 읽기 전용은 모두 `OFF`다. 두 공유는 활성화돼 있고 SMB 서비스는 실행 중이며 자동 시작도 켜져 있다.\n\nShare ACL은 둘 다 `Everyone / ALLOWED / FULL`이다. 이 값만으로 누구나 쓸 수 있다는 뜻은 아니다. 파일 접근에는 아래의 데이터셋 ACL도 적용된다. [두 ACL의 역할](https://www.truenas.com/docs/scale/25.10/scaletutorials/shares/smb/managesmbshares/)\n\n`tank/share`에는 소유자·소유 그룹·추가 그룹 하나의 `FULL_CONTROL`과 읽기·탐색 중심의 사용자·그룹 항목이 함께 있고, 모두 상속 플래그가 설정돼 있다. 반면 `tank/pve-backup`은 소유자에게 읽기·쓰기·추가·하위 항목 삭제를 허용하고, 소유 그룹과 `everyone@`는 읽기·탐색 중심이다. 이쪽의 모든 항목은 `NOINHERIT`다.\n\n이 ACL은 데이터셋 루트 기준이다. 계정별 읽기·쓰기는 소속 그룹과 하위 파일의 ACL까지 따로 확인해야 한다.\n\n공유를 나눌 때 생기는 차이는 이름만이 아니다. 일반 파일 경로에는 상속되는 권한이 있고, 백업 경로의 루트 ACL 항목에는 상속하지 않는 설정이 들어 있다. 그래서 한 공유에 접근한 계정이 다른 공유에도 같은 방식으로 쓸 수 있다고 가정할 수 없다. 내 구성에서는 `공유 이름 → 데이터셋 경로 → 파일시스템 ACL`을 이어 봐야 실제 접근 대상을 설명할 수 있다.\n\n# 백업은 다시 같은 NAS로 돌아온다\n\nProxmox는 앞의 `pve-backup` 공유를 CIFS 저장소 `nas-backup`으로 연결한다. 부팅 디스크는 로컬에 두지만 VM 백업은 다시 TrueNAS의 `tank`로 들어오는 셈이다.\n\n| 예약 작업 항목 | 설정 |\n| --- | --- |\n| 실행 여부 · 대상 | 활성화, `all=1`(전체 게스트 대상) |\n| 일정 | 매주 일요일 03:00, `Asia/Seoul` |\n| 대상 저장소 | `nas-backup` → SMB `pve-backup` |\n| 백업 모드 | `snapshot` |\n| 작업의 보관 설정 | `keep-last=4`(최근 4개 보관) |\n| 저장소의 기본 보관 설정 | `keep-all=1` |\n\n예약 작업에는 최근 4개를 남기는 조건이 별도로 있다. `snapshot` 역시 Proxmox의 백업 모드이며 TrueNAS의 정기 ZFS 스냅샷과는 별개다. [백업 모드와 보관 설정](https://github.com/proxmox/pve-docs/blob/master/vzdump.adoc)\n\n현재 남아 있는 TrueNAS VM 백업은 세 개다. 다만 앞의 `backup=0` 때문에 **데이터 디스크 세 개는 VM 백업에서 빠진다.** 부팅 환경을 되살릴 백업과 NAS 파일을 복구할 백업을 나눠 봐야 한다. [디스크별 백업 포함 옵션](https://github.com/proxmox/qemu-server/blob/master/src/PVE/QemuServer/Drive.pm)\n\nVM에서 백업 파일까지의 경로를 펼치면 아래처럼 연결된다.\n\n```text\nProxmox의 예약 백업 작업\n  → CIFS 저장소 nas-backup\n  → TrueNAS의 SMB 공유 pve-backup\n  → /mnt/tank/pve-backup 데이터셋\n  → 4TB 디스크 두 개로 만든 tank 미러\n```\n\n백업 대상이 전체 게스트라고 해도 모든 디스크의 내용이 들어가는 것은 아니다. 이 NAS VM에서는 디스크별 `backup=0`이 적용되므로, 남아 있는 VM 백업 세 개를 NAS 파일의 복사본 세 개로 셀 수 없다. 또 예약 작업의 최근 4개 보관 설정은 현재 파일 개수와 다른 값이다. 설정은 앞으로 유지할 개수의 조건이고, 세 개는 조회 당시 남아 있던 아카이브 수다.\n\n백업 파일도 같은 NAS에 있으니 TrueNAS가 멈추면 접근이 어려워진다. 데이터셋을 나눴어도 호스트 밖의 독립된 복사본은 아니다. 앱 스냅샷은 일부 있지만 TrueNAS에 등록된 정기 스냅샷·복제 작업은 없다. 외부 파일 백업의 유무와 실제 복구 가능 여부는 아직 확인할 부분이다.\n\n[홈서버 글 목록으로 돌아가기](#post/homelab-things-i-built)\n",
+      "featured": true,
+      "draft": false,
+      "template": false
+    }
+  ]
+}
