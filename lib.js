@@ -265,11 +265,12 @@ export const dateText = (date, language = 'ko') => new Intl.DateTimeFormat(langu
 
 export async function loadContent() {
   let response;
-  try {
+  const staticExport = typeof document !== 'undefined' && document.documentElement.dataset.static === 'true';
+  if (!staticExport) try {
     response = await fetch('./api/content', { cache: 'no-store' });
     if (response.ok && response.headers.get('content-type')?.includes('application/json')) return await response.json();
   } catch { /* A static export uses the generated JSON instead. */ }
   response = await fetch('./data/content.json', { cache: 'no-store' });
-  if (!response.ok) throw new Error('기록을 불러오지 못했어요. 서버가 실행 중인지 확인해 주세요.');
+  if (!response.ok) throw new Error('기록을 불러오지 못했습니다. 잠시 후 다시 시도해 주세요.');
   return response.json();
 }

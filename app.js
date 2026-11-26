@@ -2,6 +2,7 @@ import { uploadRasterImage } from './images.js';
 import { installImageViewer, installCodeCopy } from './interactions.js';
 import { escapeHTML as e, icon, safeURL, markdown, readTime, dateText, loadContent } from './lib.js';
 import { getLanguage, setLanguage, localizedSite, publishedPosts, startHerePost, visibleTopics, postInLanguage, messages } from './i18n.js';
+import { renderProfileLinks, renderActivity, renderProjects, renderTimeline } from './profile.js';
 
 const main = document.querySelector('#main');
 document.querySelector('.skip-link').addEventListener('click', event => { event.preventDefault(); main.focus(); });
@@ -62,20 +63,28 @@ document.addEventListener('click', event => {
   if (menu && !menu.hidden && !event.target.closest('#header')) closeMenu();
 });
 imageInput.addEventListener('change', () => { if (imageInput.files[0]) saveSiteImage(selectedImageField, imageInput.files[0]); });
-function closeMenu() {
+function closeMenu(restoreFocus = false) {
   const menu = document.querySelector('#mobile-nav'); if (menu) menu.hidden = true;
   const button = document.querySelector('.menu-toggle'); if (button) { button.setAttribute('aria-expanded', 'false'); button.setAttribute('aria-label', t.menuOpen); }
+  if (restoreFocus) button?.focus();
 }
-document.addEventListener('keydown', event => { if (event.key === 'Escape') closeMenu(); });
+document.addEventListener('keydown', event => {
+  const menu = document.querySelector('#mobile-nav');
+  if (event.key === 'Escape' && menu && !menu.hidden) closeMenu(true);
+});
 
 function toast(message) {
   const element = document.querySelector('#toast'); element.textContent = message; element.classList.add('visible');
   clearTimeout(toastTimer); toastTimer = setTimeout(() => element.classList.remove('visible'), 2600);
 }
 function toggleTheme() {
+  const focusTheme = document.activeElement?.classList.contains('theme-toggle');
+  const focusMobileTheme = document.activeElement?.classList.contains('mobile-theme');
   document.documentElement.dataset.theme = theme() === 'dark' ? 'light' : 'dark';
   try { localStorage.setItem('my-space-theme-v3', theme()); } catch { /* Storage is optional. */ }
   renderShell(); updateNav();
+  if (focusTheme) document.querySelector('.theme-toggle')?.focus({ preventScroll: true });
+  if (focusMobileTheme) document.querySelector('.menu-toggle')?.focus({ preventScroll: true });
 }
 function changeLanguage(next, focusControl = true) {
   if (next === language) return;
@@ -90,7 +99,8 @@ function renderShell() {
   document.querySelector('meta[name="theme-color"]').content = theme() === 'dark' ? '#101116' : '#f8f9fc';
   document.querySelector('.skip-link').textContent = t.skip;
   document.querySelector('meta[name="description"]').content = site.heroDescription || `${site.name} — ${t.blog}`;
-  const nav = `<a href="#blog" data-nav="blog">${t.blog}</a><a href="#about" data-nav="about">${t.about}</a>`;
+  const github = safeURL(site.github);
+  const nav = `<a href="#blog" data-nav="blog">${t.blog}</a><a href="#about" data-nav="about">${t.about}</a>${github ? `<a class="nav-github" href="${e(github)}" target="_blank" rel="noopener noreferrer">GitHub ${icon('diagonal')}</a>` : ''}`;
   const switcher = `<div class="language-switch" data-active="${language}" role="group" aria-label="${t.language}"><button data-language="ko" lang="ko" aria-label="한국어" aria-pressed="${language === 'ko'}">KO</button><button data-language="en" lang="en" aria-label="English" aria-pressed="${language === 'en'}">EN</button></div>`;
   document.querySelector('#header').innerHTML = `<div class="brand-group"><a class="brand" href="#blog" aria-label="${e(site.name)} ${t.home}">${e(site.name)}</a></div><nav aria-label="${t.explore}">${nav}</nav><div class="header-actions">${switcher}<button class="icon-button theme-toggle" aria-label="${theme() === 'dark' ? t.light : t.dark}">${icon(theme() === 'dark' ? 'sun' : 'moon')}</button><button class="icon-button menu-toggle" aria-label="${t.menuOpen}" aria-expanded="false" aria-controls="mobile-nav">${icon('menu')}</button>${localEditor ? `<a class="icon-button editor-avatar" href="${editorURL()}" aria-label="${editorEnabled ? t.write : t.login}">${editorEnabled ? `<span>${e(site.initials)}</span>` : icon('pen')}</a>` : ''}</div><div class="mobile-nav" id="mobile-nav" hidden>${nav}<button class="button mobile-theme">${theme() === 'dark' ? t.light : t.dark}</button></div>`;
   document.querySelectorAll('[data-language]').forEach(button => { button.setAttribute('aria-pressed', String(button.dataset.language === language)); button.onclick = event => changeLanguage(button.dataset.language, event.detail === 0); });
@@ -106,9 +116,8 @@ function renderShell() {
     document.querySelector('.menu-toggle').setAttribute('aria-expanded', 'false');
     document.querySelector('.menu-toggle').setAttribute('aria-label', t.menuOpen);
   }));
-  const github = safeURL(site.github);
   const links = [github ? `<a href="${e(github)}" target="_blank" rel="noopener noreferrer">GitHub</a>` : '', site.email ? `<a href="mailto:${e(site.email)}" aria-label="${t.email}">${icon('mail')}</a>` : ''].join('');
-  document.querySelector('#footer').innerHTML = `<div class="footer-bottom"><span>© ${e(site.name)} ${new Date().getFullYear()}</span><nav class="footer-nav" aria-label="${t.explore}">${links}${editorEnabled ? `<a href="${editorURL('#settings')}">${t.editSite}</a>` : ''}<a href="#blog" data-back-top>${t.top}</a></nav></div>`;
+  document.querySelector('#footer').innerHTML = `<div class="footer-bottom"><span>© ${e(site.name)} ${new Date().getFullYear()}</span><nav class="footer-nav" aria-label="${t.explore}">${links}<a href="./rss.xml" type="application/rss+xml">RSS</a><a href="./about/" hreflang="ko">${language === 'en' ? 'About (Korean)' : t.about}</a>${editorEnabled ? `<a href="${editorURL('#settings')}">${t.editSite}</a>` : ''}<a href="#blog" data-back-top>${t.top}</a></nav></div>`;
   document.querySelector('[data-back-top]').addEventListener('click', () => window.scrollTo({ top: 0 }));
 }
 function updateNav() {
@@ -134,6 +143,8 @@ function blogPage() {
   title.textContent = site.heroTitle || t.journal;
   title.classList.toggle('empty-title', !site.heroTitle);
   main.querySelector('.hero-description').textContent = site.heroDescription;
+  main.querySelector('.hero-description').insertAdjacentHTML('afterend', renderProfileLinks(site, language));
+  main.querySelector('.hero').insertAdjacentHTML('afterend', renderActivity(site, language, { limit: 3 }));
   const startPost = startHerePost(allPosts);
   const startLink = main.querySelector('[data-start-post]');
   startLink.hidden = !startPost;
@@ -152,6 +163,7 @@ function blogPage() {
   const editorLink = caption.querySelector('a');
   editorLink.href = editorURL(); editorLink.textContent = t.firstStory;
   const aboutImage = main.querySelector('.about-image'), aboutStrip = main.querySelector('.about-strip');
+  aboutStrip.insertAdjacentHTML('beforebegin', renderProjects(site, language, { limit: 3 }));
   aboutImage.hidden = !site.aboutImage && !editorEnabled;
   aboutImage.innerHTML = imageMarkup(site.aboutImage, 'about', t.aboutAlt);
   aboutStrip.hidden = !hasAbout(site) && !editorEnabled;
@@ -198,7 +210,7 @@ function renderResults() {
 function aboutPage() {
   const site = siteCopy();
   const hasImage = Boolean(site.aboutImage) || editorEnabled;
-  main.innerHTML = `<section class="about-page ${hasImage ? 'has-image' : ''}"><div><h1>${e(site.aboutTitle || t.about)}</h1>${site.role ? `<p class="about-role">${e(site.role)}</p>` : ''}<div class="prose">${markdown(site.aboutText)}</div>${editorEnabled ? `<a class="text-link about-edit" href="${editorURL('#settings')}">${t.editAbout}</a>` : ''}</div><div class="about-art" ${hasImage ? '' : 'hidden'}>${imageMarkup(site.aboutImage, 'about', t.aboutAlt)}</div></section>`;
+  main.innerHTML = `<section class="about-page ${hasImage ? 'has-image' : ''}"><div><h1>${e(site.aboutTitle || t.about)}</h1>${site.role ? `<p class="about-role">${e(site.role)}</p>` : ''}${renderProfileLinks(site, language)}<div class="prose">${markdown(site.aboutText)}</div>${editorEnabled ? `<a class="text-link about-edit" href="${editorURL('#settings')}">${t.editAbout}</a>` : ''}</div><div class="about-art" ${hasImage ? '' : 'hidden'}>${imageMarkup(site.aboutImage, 'about', t.aboutAlt)}</div></section>${renderActivity(site, language)}${renderProjects(site, language)}${renderTimeline(site, language)}`;
 }
 function openLegacyArticle(slug) {
   const source = content.posts.find(post => post.slug === slug && !post.draft);
@@ -231,7 +243,8 @@ function bindImageFallbacks() {
 }
 function route() {
   const hash = location.hash;
-  document.title = `${content.site.name} — ${t.journal}`;
+  const site = siteCopy();
+  document.title = hash === '#about' ? `${site.aboutTitle || t.about} — ${site.name}` : `${site.name} — ${t.journal}`;
   if (hash.startsWith('#post/')) { let slug; try { slug = decodeURIComponent(hash.slice(6)); } catch { slug = ''; } openLegacyArticle(slug); }
   else if (hash === '#about') aboutPage();
   else blogPage();
@@ -260,7 +273,9 @@ async function init() {
   const loading = main.querySelector('.loading-state'); if (loading) loading.textContent = t.loading;
   try {
     content = await loadContent();
-    try { const response = await fetch('./api/editor'); if (response.ok && response.headers.get('content-type')?.includes('application/json')) { const owner = await response.json(); localEditor = owner.enabled === true; editorEnabled = owner.authenticated === true; } } catch { /* Editing is local only. */ }
+    if (document.documentElement.dataset.static !== 'true') {
+      try { const response = await fetch('./api/editor'); if (response.ok && response.headers.get('content-type')?.includes('application/json')) { const owner = await response.json(); localEditor = owner.enabled === true; editorEnabled = owner.authenticated === true; } } catch { /* Editing is local only. */ }
+    }
     renderShell(); route();
     window.addEventListener('hashchange', () => { if (location.hash !== '#main') route(); });
     window.addEventListener('popstate', () => { language = getLanguage(); t = messages[language]; visibleCount = 12; renderShell(); route(); });
